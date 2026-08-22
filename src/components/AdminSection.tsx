@@ -83,14 +83,14 @@ export const AdminSection: React.FC = () => {
         setUploadedPath(data.path);
         alert(translate(
           `File "${selectedFile.name}" uploaded successfully to local storage directory.`,
-          `Ifisambilisho "${selectedFile.name}" nafyatwa bwino mu local storage.`
+          `Ifisambilisho "${selectedFile.name}" nafitwalika bwino mu local storage.`
         ));
       } else {
-        alert(translate('Upload failed: ' + (data.error || 'Unknown error'), 'Ukuwamya file kushipwile.'));
+        alert(translate('Upload failed: ' + (data.error || 'Unknown error'), ' File Yafilikwa ukutuma.'));
       }
     } catch (err: any) {
       console.error(err);
-      alert(translate('Upload error: ' + err.message, 'Amasungile ya file tayaishibe.'));
+      alert(translate('Upload error: ' + err.message, ' File Yafilikwa ukutumikwa.'));
     } finally {
       setUploading(false);
     }
@@ -100,7 +100,7 @@ export const AdminSection: React.FC = () => {
   const saveMediaMetadata = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!uploadedPath) {
-      alert(translate('Please upload a file first.', 'Fyatani file lintanshi.'));
+      alert(translate('Please upload a file first.', 'Tampilenipo ukutuma file.'));
       return;
     }
 
@@ -189,7 +189,7 @@ export const AdminSection: React.FC = () => {
       questions
     });
 
-    alert(translate('Quiz saved and deployed to server.', 'Quiz isungilwe bwino.'));
+    alert(translate('Quiz saved and deployed to server.', 'Quiz naisungikwa bwino.'));
     setQuizTitleEn('');
     setQuizTitleBm('');
     setQuizDescEn('');
@@ -210,7 +210,7 @@ export const AdminSection: React.FC = () => {
       'announcement'
     );
 
-    alert(translate('Broadcast alert pushed successfully.', 'Ubuthenga bwa alert bwamililwa bwino.'));
+    alert(translate('Broadcast alert pushed successfully.', ' Alert naitumikwa bwino.'));
     setAlertTitleEn('');
     setAlertTitleBm('');
     setAlertMsgEn('');
@@ -227,7 +227,7 @@ export const AdminSection: React.FC = () => {
             <span>{translate('Administrator Command Portal', 'Command Portal ya Admin')}</span>
           </h2>
           <p className="text-slate-400 text-sm mt-1">
-            {translate('Upload bimodal educational files, assemble interactive quizzes, and monitor user security logs.', 'Bifyatako ifisambilisho fya PDF, amavidio, no kumona ifishalembwa.')}
+            {translate('Upload bimodal educational files, assemble interactive quizzes, and monitor user security logs.', ' Ifisambilisho fya PDF, nama amavidio.')}
           </p>
         </div>
 
@@ -285,16 +285,16 @@ export const AdminSection: React.FC = () => {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
             {/* Learners History leaderboard table mockup */}
             <div className="lg:col-span-8 bg-slate-900 border border-slate-800 p-6 rounded-2xl space-y-4">
-              <h3 className="font-bold text-base text-white">{translate('Recent Quiz Attempts Log', 'Quiz attempts isungilwe')}</h3>
+              <h3 className="font-bold text-base text-white">{translate('Recent Quiz Attempts Log', 'Quiz attempts ayasungikwe')}</h3>
               
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs text-slate-300">
                   <thead className="bg-slate-950/60 text-[10px] text-slate-400 uppercase tracking-wider font-mono">
                     <tr>
                       <th className="p-3">{translate('User Email', 'Email ya muntu')}</th>
-                      <th className="p-3">{translate('Quiz Title', 'Icayako')}</th>
-                      <th className="p-3">{translate('Score Obtained', 'Ama kwata')}</th>
-                      <th className="p-3">{translate('Completed Date', 'Pwishilwe ubushiku')}</th>
+                      <th className="p-3">{translate('Quiz Title', 'Quiz')}</th>
+                      <th className="p-3">{translate('Score Obtained', 'Efyomwakwata')}</th>
+                      <th className="p-3">{translate('Completed Date', ' ubushiku eyo mwapwishishepo')}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-850">
@@ -401,7 +401,7 @@ export const AdminSection: React.FC = () => {
                 />
                 <Upload className="h-10 w-10 text-slate-500 mx-auto" />
                 <p className="text-xs text-white font-bold">
-                  {selectedFile ? selectedFile.name : translate('Drag & drop or click to select', 'Twalani pano nangu tinya fye')}
+                  {selectedFile ? selectedFile.name : translate('Drag & drop or click to select', 'Cisendeni noku cileta nangula tinikenife')}
                 </p>
                 <p className="text-[10px] text-slate-400 uppercase font-mono">
                   {uploadType === 'video' ? 'MP4 max 100MB' : uploadType === 'image' ? 'JPEG/PNG/WEBP max 5MB' : 'PDF max 20MB'}
@@ -418,7 +418,7 @@ export const AdminSection: React.FC = () => {
                     : 'bg-green-600 hover:bg-green-500 text-white'
                 }`}
               >
-                <span>{uploading ? translate('Uploading File...', 'Balefyata...') : translate('Upload to Server Directory', 'Fyatilani ku server')}</span>
+                <span>{uploading ? translate('Uploading File...', 'File Eletwalikwa...') : translate('Upload to Server Directory', 'Twaleni ku server')}</span>
               </button>
             </form>
           </div>
@@ -456,7 +456,7 @@ export const AdminSection: React.FC = () => {
                     required
                     value={titleBm}
                     onChange={(e) => setTitleBm(e.target.value)}
-                    placeholder="Ifunde lya kusunga MoMo"
+                    placeholder="Ifunde lya kusunga Mobile Money"
                     className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white text-xs focus:outline-none focus:ring-2 focus:ring-orange-500"
                   />
                 </div>
@@ -465,7 +465,7 @@ export const AdminSection: React.FC = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-medium uppercase tracking-wider text-slate-400 mb-1">
-                    {translate('English Description', 'Ifilondolwelwe mu Cingeleshi')}
+                    {translate('English Description', 'Ifyakulondolola mu Cingeleshi')}
                   </label>
                   <textarea
                     id="meta-desc-en"
@@ -479,7 +479,7 @@ export const AdminSection: React.FC = () => {
                 </div>
                 <div>
                   <label className="block text-xs font-medium uppercase tracking-wider text-slate-400 mb-1">
-                    {translate('Bemba Description', 'Ifilondolwelwe mu Cibemba')}
+                    {translate('Bemba Description', 'Ifyakulondolola mu Cibemba')}
                   </label>
                   <textarea
                     id="meta-desc-bm"
@@ -487,7 +487,7 @@ export const AdminSection: React.FC = () => {
                     required
                     value={descBm}
                     onChange={(e) => setDescBm(e.target.value)}
-                    placeholder="Sambilileni ifi funde fikalamba..."
+                    placeholder="Sambilileni ama funde Yakalamba..."
                     className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white text-xs focus:outline-none"
                   ></textarea>
                 </div>
@@ -525,7 +525,7 @@ export const AdminSection: React.FC = () => {
 
               <div>
                 <label className="block text-xs font-medium uppercase tracking-wider text-slate-400 mb-1">
-                  {translate('File Binary Location Path', 'Uku kuli aseti')}
+                  {translate('File Binary Location Path', 'Ukuli File')}
                 </label>
                 <input
                   id="meta-path-display"
@@ -547,7 +547,7 @@ export const AdminSection: React.FC = () => {
                     : 'bg-orange-500 hover:bg-orange-600 text-white'
                 }`}
               >
-                {translate('Save Media and Deploy', 'Sungeni no kumiila')}
+                {translate('Save Media and Deploy', 'Sungeni noku Twala')}
               </button>
             </form>
           </div>
@@ -579,7 +579,7 @@ export const AdminSection: React.FC = () => {
                 <input
                   id="quiz-title-bm"
                   type="text"
-                  placeholder="Icayako ca Amalyashi ya Bufi"
+                  placeholder="Quiz iyilelanda pamalyashi ya Bufi"
                   value={quizTitleBm}
                   onChange={(e) => setQuizTitleBm(e.target.value)}
                   className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white text-xs focus:outline-none"
@@ -601,7 +601,7 @@ export const AdminSection: React.FC = () => {
                 <textarea
                   id="quiz-desc-bm"
                   rows={2}
-                  placeholder="Eseni amano yenu muli fyakubepa fya links..."
+                  placeholder="Esheni amano yenu pafilelondolola ubufi bwaba muma links..."
                   value={quizDescBm}
                   onChange={(e) => setQuizDescBm(e.target.value)}
                   className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white text-xs focus:outline-none"
@@ -695,7 +695,7 @@ export const AdminSection: React.FC = () => {
                 className="px-4 py-2 bg-green-600 hover:bg-green-500 text-white font-bold rounded-lg text-xs flex items-center space-x-1 cursor-pointer shadow"
               >
                 <Plus className="h-4 w-4" />
-                <span>{translate('Add Question', 'Lundeni Ipusho')}</span>
+                <span>{translate('Add Question', 'Bikapo Ilipusho')}</span>
               </button>
             </div>
           </div>
@@ -707,7 +707,7 @@ export const AdminSection: React.FC = () => {
         <div className="max-w-2xl mx-auto bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl text-left">
           <h3 className="font-bold text-lg text-white mb-4 flex items-center space-x-2">
             <AlertOctagon className="h-5 w-5 text-orange-500 animate-bounce" />
-            <span>{translate('Emergency Alert Broadcaster', 'Ukusandika amachenjelelo ya bufi')}</span>
+            <span>{translate('Emergency Alert Broadcaster', 'Ukusandika amachenjelo ya bufi')}</span>
           </h3>
 
           <form onSubmit={broadcastAnnouncement} className="space-y-4">
@@ -755,7 +755,7 @@ export const AdminSection: React.FC = () => {
                 <textarea
                   id="alert-msg-bm"
                   rows={4}
-                  placeholder="Abantu abengi balenlandapo kuli bampulamafunde balelila foni ukwipusha PIN..."
+                  placeholder="Abantu abengi balenlandapo pali bampulamafunde abaletumina abantu foni ukwipusha PIN yabo..."
                   value={alertMsgBm}
                   onChange={(e) => setAlertMsgBm(e.target.value)}
                   className="w-full px-3 py-2 rounded bg-slate-800 border border-slate-700 text-white text-xs"

@@ -25,11 +25,11 @@ export const HomeSection: React.FC = () => {
       if (data.success && data.tip) {
         setDailyTip(data.tip);
       } else {
-        setDailyTip(translate('Protect your mobile money wallet. Never share your PIN with anyone claiming to call from customer care.', 'Kucingilila ndalama sha MoMo kulasunga PIN muli mwebe bene.'));
+        setDailyTip(translate('Protect your mobile money wallet. Never share your PIN with anyone claiming to call from customer care.', 'Sungeni indalama ishamu Mobile Money. Isungileni PIN mwebene.'));
       }
     } catch (e) {
       console.warn('Daily tip generation failed, using fallback tip:', e);
-      setDailyTip(translate('Protect your mobile money wallet. Never share your PIN with anyone claiming to call from customer care.', 'Kucingilila ndalama sha MoMo kulasunga PIN muli mwebe bene.'));
+      setDailyTip(translate('Protect your mobile money wallet. Never share your PIN with anyone claiming to call from customer care.', 'Sungeni indalama ishamu Mobile Money. Isungeleni PIN mwebene.'));
     } finally {
       setLoadingTip(false);
     }
@@ -69,20 +69,20 @@ export const HomeSection: React.FC = () => {
           <div className="lg:col-span-7 space-y-6 text-left">
             <div className="inline-flex items-center space-x-2 bg-green-500/10 border border-green-500/30 text-green-400 px-3 py-1.5 rounded-full text-xs font-mono">
               <Shield className="h-3.5 w-3.5" />
-              <span>{translate('ZAMBIAN CYBERSECURITY INITIATIVE', 'UPANGI WA UKUICINGILILA MU ZAMBIA')}</span>
+              <span>{translate('ZAMBIAN CYBERSECURITY INITIATIVE', ' UKUICINGILILA UKWAPA INTANETI MU ZAMBIA')}</span>
             </div>
 
             <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight leading-tight">
               {translate(
                 'Protect Your Identity and Money in the Digital World',
-                'Kucingilila Imparian na Ndalama Shenu pa Intaneti'
+                'Cingilileni Indalama Shenu'
               )}
             </h1>
 
             <p className="text-slate-300 text-base sm:text-lg max-w-xl leading-relaxed">
               {translate(
                 'Learn how to identify mobile money scams, prevent social media hacks, and safeguard your family. Structured lessons available in both English and Bemba.',
-                'Sambilileni ifyo mwingasanga amalyashi ya bufi, ifyakucingilila muli WhatsApp nangu Facebook, no kuchenjela kuli bampulamafunde. Ifisambilisho fili mu Cingeleshi na muli Cibemba.'
+                'Sambilileni ifyo mwingasanga amalyashi aya bufi, ifyakuicingilila pa WhatsApp napa Facebook, no kuchenjela kuli bamapulamafunde. Ifisambilisho fili mu Cingeleshi na mu Cibemba.'
               )}
             </p>
 
@@ -92,7 +92,7 @@ export const HomeSection: React.FC = () => {
                 onClick={() => setActiveSection('learn')}
                 className="px-6 py-3 bg-green-600 hover:bg-green-500 text-white font-bold rounded-xl flex items-center space-x-2 transition-all shadow cursor-pointer transform hover:-translate-y-0.5"
               >
-                <span>{translate('Start Learning Now', 'Ambilisheni Ukusambilila')}</span>
+                <span>{translate('Start Learning Now', 'Ambeni Ukusambilila')}</span>
                 <ArrowRight className="h-4 w-4" />
               </button>
 
@@ -101,7 +101,7 @@ export const HomeSection: React.FC = () => {
                 onClick={() => setActiveSection('chatbot')}
                 className="px-6 py-3 bg-slate-800 border border-slate-700 hover:bg-slate-700 text-white font-bold rounded-xl flex items-center space-x-2 transition-all cursor-pointer"
               >
-                <span>{translate('Talk to Ba Cyber Advisor', 'Lanshanyeni na Cyber Advisor')}</span>
+                <span>{translate('Talk to Ba Cyber Advisor', 'Lanshanyeni naba Cyber Advisor')}</span>
               </button>
             </div>
           </div>
@@ -139,10 +139,10 @@ export const HomeSection: React.FC = () => {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-[10px] font-bold text-slate-200 truncate">
-                    {translate('Suspicious Airtel Caller Detected', 'Foni ya Bufi ya Airtel Isangilwe')}
+                    {translate('Suspicious Airtel Caller Detected', 'Foni ya Bufi ya Airtel Yasangwa')}
                   </p>
                   <p className="text-[9px] text-slate-400 truncate">
-                    {translate('Attempted MoMo PIN request blocked', 'Ifisuma fya MoMo filecingililwa')}
+                    {translate('Attempted MoMo PIN request blocked', 'Pali abalefwaya PIN yenu iyaku MTN Mobile Money ebotwakanya')}
                   </p>
                 </div>
               </div>
@@ -160,7 +160,7 @@ export const HomeSection: React.FC = () => {
           <div>
             <span className="text-3xl font-extrabold text-white block">{activeLearners}+</span>
             <span className="text-xs text-slate-400 uppercase tracking-wider block font-mono">
-              {translate('Active Zambian Learners', 'Abantu Balesambilila')}
+              {translate('Active Zambian Learners', 'Abantu Abalesambilila')}
             </span>
           </div>
         </div>
@@ -184,7 +184,7 @@ export const HomeSection: React.FC = () => {
           <div>
             <span className="text-3xl font-extrabold text-white block">{totalQuizzesCompleted}</span>
             <span className="text-xs text-slate-400 uppercase tracking-wider block font-mono">
-              {translate('Quizzes Completed', 'Ifyayako Ifyapwishwa')}
+              {translate('Quizzes Completed', 'Ama Quizzes Ayapwishiwa')}
             </span>
           </div>
         </div>
@@ -203,7 +203,7 @@ export const HomeSection: React.FC = () => {
               <div className="flex items-center space-x-2">
                 <Sparkles className="h-5 w-5 text-green-400 animate-spin" />
                 <h3 className="font-bold text-lg text-white">
-                  {translate('Daily Smart Security Tip', 'Icipote ca Kucingilila Cila Bushiku')}
+                  {translate('Daily Smart Security Tip', 'Icipote ca Kuicingilila Cila Bushiku')}
                 </h3>
               </div>
               <div className="flex space-x-1">
@@ -211,7 +211,7 @@ export const HomeSection: React.FC = () => {
                   id="speak-tip-btn"
                   onClick={speakTip}
                   className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition-all cursor-pointer"
-                  title={translate('Read Aloud', 'Belengela muli foni')}
+                  title={translate('Read Aloud', 'Belengesha')}
                 >
                   <Volume2 className="h-4 w-4" />
                 </button>
@@ -239,7 +239,7 @@ export const HomeSection: React.FC = () => {
                 </p>
                 <div className="text-[11px] text-slate-400 flex items-center space-x-1.5 font-mono">
                   <Shield className="h-3.5 w-3.5 text-green-500" />
-                  <span>{translate('AI Recommended • Specific to Zambia', 'Ifilesenda ku AI • Mu Zambia fye')}</span>
+                  <span>{translate('AI Recommended • Specific to Zambia', ' Mu Zambia fye')}</span>
                 </div>
               </div>
             )}
@@ -250,7 +250,7 @@ export const HomeSection: React.FC = () => {
               <span className="font-bold text-green-400 block">{translate('Did you know?', 'Bushe mwalishiba?')}</span>
               {translate(
                 'Over 85% of mobile money losses in Chinsali and Copperbelt happen through social engineering scams, not system hacking. Awareness is your absolute best defense!',
-                'Kuiposha fye ne mishi yapamona ndalama sha MoMo sha fye ishingi (85%) mu Chinsali na Copperbelt kulasenda muli fyakubepa, te muli fya kubomba muli system. Ukusambilila e kucingilila kwawama!'
+                'Impendwa (85%) mu Chinsali na Copperbelt kulaba abantu abasendwa mu fyakubepwa. Ukusambilila pafya kuicingilila kusuma sana!'
               )}
             </div>
           </div>
@@ -261,7 +261,7 @@ export const HomeSection: React.FC = () => {
           <div className="space-y-4">
             <h3 className="font-bold text-lg text-white border-b border-slate-800 pb-3 flex items-center space-x-2">
               <Volume2 className="h-5 w-5 text-green-500" />
-              <span>{translate('Announcements & Alerts', 'Ifyalembelwa na Machenjelelo')}</span>
+              <span>{translate('Announcements & Alerts', 'Ifyalembelwa na Machenjelo')}</span>
             </h3>
 
             <div className="space-y-3 max-h-[220px] overflow-y-auto pr-1">
@@ -278,7 +278,7 @@ export const HomeSection: React.FC = () => {
                     <span className={`px-2 py-0.5 rounded text-[9px] uppercase tracking-wider font-bold ${
                       notif.type === 'announcement' ? 'bg-orange-500/10 text-orange-400' : 'bg-green-500/10 text-green-400'
                     }`}>
-                      {notif.type === 'announcement' ? translate('ALERT', 'CHENJELA') : translate('LESSON', 'SAMBILILO')}
+                      {notif.type === 'announcement' ? translate('ALERT', 'CHENJELA') : translate('LESSON', 'ISAMBILILO')}
                     </span>
                     <span className="text-[9px] text-slate-400 font-mono">
                       {new Date(notif.createdAt).toLocaleDateString()}
@@ -297,7 +297,7 @@ export const HomeSection: React.FC = () => {
 
           <div className="border-t border-slate-800 pt-4 mt-4 text-center">
             <p className="text-[10px] text-slate-500 font-mono">
-              {translate('For urgent cybersecurity assistance, contact ZICTA on short code 709.', 'Mukulanshanya na bwangu muli fya kofya, tumbeni foni kuli ZICTA pali short code 709.')}
+              {translate('For urgent cybersecurity assistance, contact ZICTA on short code 709.', ' Tumeni foni kuli ZICTA pali short code 709.')}
             </p>
           </div>
         </div>
@@ -308,14 +308,14 @@ export const HomeSection: React.FC = () => {
         <div className="flex justify-between items-center">
           <h3 className="text-2xl font-bold text-white flex items-center space-x-2">
             <Play className="h-5 w-5 text-green-400" />
-            <span>{translate('Featured Educational Videos', 'Amavidio ya Sambililo')}</span>
+            <span>{translate('Featured Educational Videos', 'Amavidio aya Sambilisha')}</span>
           </h3>
           <button
             id="highlight-more-videos-btn"
             onClick={() => setActiveSection('learn')}
             className="text-sm font-bold text-green-400 hover:underline flex items-center space-x-1 cursor-pointer"
           >
-            <span>{translate('View All', 'Mone Yonse')}</span>
+            <span>{translate('View All', 'Mona Fyonse')}</span>
             <ArrowRight className="h-4 w-4" />
           </button>
         </div>

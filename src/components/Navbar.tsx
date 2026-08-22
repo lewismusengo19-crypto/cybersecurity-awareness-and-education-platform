@@ -58,7 +58,7 @@ export const Navbar: React.FC = () => {
 
   const handleResetRequest = async () => {
     if (!email) {
-      setErrorMsg(translate('Please enter your email address first.', 'Sambilisheni inshila yenu iya email intanshi.'));
+      setErrorMsg(translate('Please enter your email address first.', 'Tampilenipo ukwingisha email yenu.'));
       return;
     }
     await resetPassword(email);
@@ -66,9 +66,9 @@ export const Navbar: React.FC = () => {
 
   const menuItems = [
     { id: 'home', en: 'Home', bm: 'Icalo' },
-    { id: 'learn', en: 'Learn', bm: 'Sambilila' },
+    { id: 'learn', en: 'Learn', bm: 'Sambilileni' },
     { id: 'gallery', en: 'Infographics', bm: 'Ifipope' },
-    { id: 'quizzes', en: 'Quizzes', bm: 'Ifyayako' },
+    { id: 'quizzes', en: 'Quizzes', bm: 'Quizzes' },
     { id: 'chatbot', en: 'Ba Cyber Advisor', bm: 'Ba Cyber Advisor' },
     { id: 'about', en: 'About', bm: 'Ifitulambika' },
     { id: 'contact', en: 'Contact', bm: 'Lanshanyeni' }
@@ -155,7 +155,7 @@ export const Navbar: React.FC = () => {
                   ? 'border-yellow-400 hover:bg-yellow-400/10' 
                   : 'border-slate-700 hover:bg-slate-800 text-slate-300'
               }`}
-              title={translate('Switch to Bemba', 'Kutula ku Cingeleshi')}
+              title={translate('Switch to Bemba', 'Kabiyeni ku Cibemba')}
             >
               <Languages className="h-4 w-4" />
               <span>{language === 'en' ? 'BEMBA' : 'ENGLISH'}</span>
@@ -171,7 +171,7 @@ export const Navbar: React.FC = () => {
                     ? 'border-yellow-400 text-yellow-400 hover:bg-yellow-400/10' 
                     : 'border-slate-700 text-slate-300 hover:bg-slate-800'
                 }`}
-                title={translate('Accessibility settings', 'Fya kucinsha imisungile')}
+                title={translate('Accessibility settings', 'Ifya kucinja imisungile')}
               >
                 <Settings className="h-4 w-4" />
               </button>
@@ -186,7 +186,7 @@ export const Navbar: React.FC = () => {
                   
                   {/* High Contrast Toggle */}
                   <div className="flex items-center justify-between">
-                    <span className="text-xs">{translate('High Contrast', 'Imitambulo iyakosa')}</span>
+                    <span className="text-xs">{translate('High Contrast', 'High Contrast')}</span>
                     <button
                       id="contrast-toggle"
                       onClick={() => setHighContrast(!highContrast)}
@@ -234,7 +234,7 @@ export const Navbar: React.FC = () => {
                   className={`p-2 rounded-lg border cursor-pointer hover:bg-red-500/10 hover:text-red-400 transition-all ${
                     highContrast ? 'border-yellow-400 text-yellow-400' : 'border-slate-700 text-slate-300'
                   }`}
-                  title={translate('Logout', 'Ingilamo ku nse')}
+                  title={translate('Logout', 'Ukufumamo')}
                 >
                   <LogOut className="h-4 w-4" />
                 </button>
@@ -253,7 +253,7 @@ export const Navbar: React.FC = () => {
                 }`}
               >
                 <LogIn className="h-4 w-4" />
-                <span>{translate('Sign In', 'Kwingila')}</span>
+                <span>{translate('Sign In', 'Ukwingila')}</span>
               </button>
             )}
           </div>
@@ -318,7 +318,7 @@ export const Navbar: React.FC = () => {
               }}
               className="block w-full text-left px-3 py-2 rounded-md text-base font-bold text-orange-400 border border-orange-500/30 hover:bg-orange-500/10"
             >
-              {translate('Admin Portal', 'Ifisambilisho Fya Admin')}
+              {translate('Admin Portal', 'Ifisambilisho Fyaba Admin')}
             </button>
           )}
 
@@ -332,7 +332,7 @@ export const Navbar: React.FC = () => {
               }`}
             >
               <Eye className="h-4 w-4" />
-              <span>{translate('Contrast', 'Amakosa')}</span>
+              <span>{translate('Contrast', 'Contrast')}</span>
             </button>
 
             <button
@@ -343,7 +343,7 @@ export const Navbar: React.FC = () => {
               }`}
             >
               <Type className="h-4 w-4" />
-              <span>{translate('Large Text', 'Ifikalamba')}</span>
+              <span>{translate('Large Text', 'Amalembo ayakalamba')}</span>
             </button>
           </div>
 
@@ -359,7 +359,7 @@ export const Navbar: React.FC = () => {
                   }}
                   className="px-3 py-1.5 rounded bg-red-600 text-white text-xs font-medium cursor-pointer"
                 >
-                  {translate('Logout', 'Ingilamo ku nse')}
+                  {translate('Logout', 'Ukufumamo')}
                 </button>
               </div>
             ) : (
@@ -374,7 +374,7 @@ export const Navbar: React.FC = () => {
                   highContrast ? 'bg-yellow-400 text-black' : 'bg-green-600 text-white'
                 }`}
               >
-                {translate('Sign In', 'Kwingila')}
+                {translate('Sign In', 'Ukwingila')}
               </button>
             )}
           </div>
@@ -402,13 +402,13 @@ export const Navbar: React.FC = () => {
               <Shield className={`h-12 w-12 mx-auto mb-2 ${highContrast ? 'text-yellow-400' : 'text-green-500'}`} />
               <h3 className="text-2xl font-bold tracking-tight">
                 {isRegistering 
-                  ? translate('Create Account', 'Pangila Account Mpya') 
-                  : translate('Welcome Back', 'Ingileni Mukati')}
+                  ? translate('Create Account', 'Pangeni Account Iyipya') 
+                  : translate('Welcome Back', 'Mwaisenipo Mukwai')}
               </h3>
               <p className="text-sm text-slate-400 mt-1">
                 {isRegistering 
                   ? translate('Learn and secure your online presence.', 'Sambilileni pa kuicingilila bwino.') 
-                  : translate('Sign in to resume lessons and track quiz performance.', 'Ingileni mwasanguka ifisambilisho.')}
+                  : translate('Sign in to resume lessons and track quiz performance.', 'Ingileni mukonkanyepo ifisambilisho.')}
               </p>
             </div>
 
@@ -438,7 +438,7 @@ export const Navbar: React.FC = () => {
 
               <div>
                 <label className="block text-xs font-medium uppercase tracking-wider text-slate-400 mb-1">
-                  {translate('Email Address', 'Inshila ya Email')}
+                  {translate('Email Address', 'Email Yenu')}
                 </label>
                 <input
                   id="auth-email-input"
@@ -470,7 +470,7 @@ export const Navbar: React.FC = () => {
                     onClick={handleResetRequest}
                     className="text-xs text-green-400 hover:underline mt-1 block cursor-pointer"
                   >
-                    {translate('Forgot Password?', 'Mwalaba ishiwi lya kufisa?')}
+                    {translate('Forgot Password?', 'Mwalaba Password?')}
                   </button>
                 )}
               </div>
@@ -478,7 +478,7 @@ export const Navbar: React.FC = () => {
               {isRegistering && (
                 <div>
                   <label className="block text-xs font-medium uppercase tracking-wider text-slate-400 mb-2">
-                    {translate('Account Role', 'Icipande ca Account')}
+                    {translate('Account Role', 'Efyo Account Icita')}
                   </label>
                   <div className="grid grid-cols-2 gap-2">
                     <button
@@ -490,7 +490,7 @@ export const Navbar: React.FC = () => {
                           : 'border-slate-700 text-slate-400 hover:bg-slate-800'
                       }`}
                     >
-                      {translate('Learner/Student', 'Uusambilila')}
+                      {translate('Learner/Student', 'Kasambilila')}
                     </button>
                     <button
                       type="button"
@@ -501,7 +501,7 @@ export const Navbar: React.FC = () => {
                           : 'border-slate-700 text-slate-400 hover:bg-slate-800'
                       }`}
                     >
-                      {translate('Administrator', 'Kangilila (Admin)')}
+                      {translate('Administrator', 'Kakotolola (Admin)')}
                     </button>
                   </div>
                 </div>
@@ -511,9 +511,9 @@ export const Navbar: React.FC = () => {
               {isRegistering && password.length > 0 && (
                 <div className="space-y-1">
                   <div className="flex justify-between text-[10px] text-slate-400 font-mono">
-                    <span>{translate('Password Security Strength', 'Amakosa ya Password')}:</span>
+                    <span>{translate('Password Security Strength', 'Ukukosha kwa Password')}:</span>
                     <span className={password.length < 6 ? 'text-red-400' : password.length < 10 ? 'text-yellow-400' : 'text-green-400'}>
-                      {password.length < 6 ? translate('Weak', 'Ayasakana') : password.length < 10 ? translate('Medium', 'Ilingene') : translate('Strong', 'Iyakosa sana')}
+                      {password.length < 6 ? translate('Weak', 'Taikwete Amaka') : password.length < 10 ? translate('Medium', 'Nailinga') : translate('Strong', 'Naikosa bwino')}
                     </span>
                   </div>
                   <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
@@ -538,10 +538,10 @@ export const Navbar: React.FC = () => {
               >
                 <span>
                   {authLoading 
-                    ? translate('Processing...', 'Cilebombako...') 
+                    ? translate('Processing...', 'Cilebombelapo...') 
                     : isRegistering 
-                      ? translate('Register Now', 'Pangila Account') 
-                      : translate('Sign In Securely', 'Ingila lolesha')}
+                      ? translate('Register Now', 'Pangeni Account') 
+                      : translate('Sign In Securely', 'Ingileni')}
                 </span>
               </button>
             </form>
@@ -557,7 +557,7 @@ export const Navbar: React.FC = () => {
               >
                 {isRegistering 
                   ? translate('Already have an account? Sign In', 'Mwalikwata kale account? Ingileni') 
-                  : translate("Don't have an account? Sign Up", "Tamwakwata account? Pangileni imoneka")}
+                  : translate("Don't have an account? Sign Up", "Tamwakwata account? Pangeni account")}
               </button>
             </div>
           </div>

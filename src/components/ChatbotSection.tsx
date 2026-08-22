@@ -23,7 +23,7 @@ export const ChatbotSection: React.FC = () => {
         role: 'model',
         content: translate(
           "Muli shani! I am **Ba Cyber Advisor**, your digital security assistant. Ask me any question in English or Bemba. For example:\n- How do I secure my Mobile Money (MoMo)?\n- How do I set up WhatsApp Two-Factor Authentication?",
-          "Muli shani! Nine **Ba Cyber Advisor**, uushila wenu uwa fya kacingilila. Mwinganjipusha muli Cingeleshi nelyo Cibemba. Mukasambilile:\n- Kuti nacingilila shani ndalama shandi isha MoMo?\n- Kuti nabomfya shani Two-Factor Authentication pali WhatsApp?"
+          "Muli shani! Nine **Ba Cyber Advisor**, uwakumyafilisha pafya kuicingilila pa intaneti. Kutimwanjipusha mu Cingeleshi namu Cibemba. Icilangililo:\n- Kuti nacingilila shani ndalama shandi isha pa Mobile Money?\n- Kuti nabomfya shani Two-Factor Authentication pali WhatsApp?"
         )
       }
     ]);
@@ -72,7 +72,7 @@ export const ChatbotSection: React.FC = () => {
           role: 'model',
           content: translate(
             'Sorry, I could not generate a response. Ensure your API key is correctly configured.',
-            'Mpeeleleko ubwafya, nshaswike bwino. Moneni nga API key yenu yaba bwino.'
+            'Njeleleniko, nshaswike bwino. Moneni nga API key yenu nga ilife bwino.'
           )
         }]);
       }
@@ -83,7 +83,7 @@ export const ChatbotSection: React.FC = () => {
         role: 'model',
         content: translate(
           'Network error. Please try again.',
-          'Ubwafya bwa masebela. Eseni kabili.'
+          'Ubwafya bwa Network. Esheni nakabili.'
         )
       }]);
     } finally {
@@ -98,7 +98,7 @@ export const ChatbotSection: React.FC = () => {
         role: 'model',
         content: translate(
           "Muli shani! I am **Ba Cyber Advisor**, your digital security assistant. Ask me any question in English or Bemba.",
-          "Muli shani! Nine **Ba Cyber Advisor**, uushila wenu uwa fya kacingilila. Mwinganjipusha muli Cingeleshi nelyo Cibemba."
+          "Muli shani! Ninebo **Ba Cyber Advisor**, uwakumyafilisha pafya kacingilila. Kutimwanjipusha mu Cingeleshi namu Cibemba."
         )
       }
     ]);
@@ -108,17 +108,17 @@ export const ChatbotSection: React.FC = () => {
   const suggestions = [
     {
       en: "Protect my MTN/Airtel MoMo",
-      bm: "Ukuicingilila MoMo yandi",
+      bm: "Ukucingila MoMo/Airtel money yandi",
       icon: Smartphone
     },
     {
       en: "How to spot a Facebook hack",
-      bm: "Ukwishiba bufi bwa Facebook",
+      bm: "Kutinaishiba shani ubufi eyobengambepa pa Facebook",
       icon: Key
     },
     {
       en: "How to set WhatsApp Two-Factor",
-      bm: "Ukubomfya Two-Factor muli WhatsApp",
+      bm: "Ukubomfya Two-Factor pa WhatsApp",
       icon: HelpCircle
     }
   ];
@@ -173,7 +173,7 @@ export const ChatbotSection: React.FC = () => {
           <div className="flex justify-start">
             <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 rounded-bl-none max-w-sm flex items-center space-x-2 text-slate-400 text-xs">
               <div className="h-4 w-4 border-2 border-green-500 border-t-transparent rounded-full animate-spin"></div>
-              <span>{translate('Ba Cyber Advisor is drafting security response...', 'Cyber Advisor alemupangila kwasuka...')}</span>
+              <span>{translate('Ba Cyber Advisor is drafting security response...', 'Cyber Advisor alemipangila ubwasuko...')}</span>
             </div>
           </div>
         )}
@@ -210,7 +210,7 @@ export const ChatbotSection: React.FC = () => {
           type="text"
           value={userInput}
           onChange={(e) => setUserInput(e.target.value)}
-          placeholder={translate('Type your cybersecurity question...', 'Lembani ipusho lyenu ilya kacingilila...')}
+          placeholder={translate('Type your cybersecurity question...', 'Lembani ilipusho lyenu...')}
           className="flex-1 px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-white text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
         />
         <button

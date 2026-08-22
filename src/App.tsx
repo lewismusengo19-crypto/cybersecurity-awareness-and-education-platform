@@ -78,7 +78,7 @@ const MainAppContent: React.FC = () => {
             <p className="text-xs text-slate-400 leading-relaxed max-w-sm">
               {translate(
                 'A dedicated research initiative protecting Zambians from Mobile Money (MoMo) scams, social engineering, and online identity theft through native bimodal education.',
-                'Upangi wasambililo wa kacingilila pa foni ku bampulamafunde ba MoMo mu Zambia, ukupitila mu Cingeleshi na Cibemba.'
+                ' Isambililo iyilelondolola pafyo mwingaicingilila pa foni kuli bapula amafunde abengafwaya ukumibila indalama isha mu Mobile Money mu Zambia, ukupitila mu Cingeleshi ne Cibemba.'
               )}
             </p>
           </div>

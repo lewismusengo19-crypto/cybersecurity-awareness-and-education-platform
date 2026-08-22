@@ -161,7 +161,7 @@ app.post('/api/chat', async (req, res) => {
 
     res.json({
       success: true,
-      reply: response.text || (isBemba ? 'Mpeeleleko ubwafya, nshaswike bwino.' : 'Sorry, I could not generate a response. Please try again.')
+      reply: response.text || (isBemba ? 'Njeleleniko, capalakwati nafilwa ukwasuka. Kuti mwaipusha nakabili mukwai.' : 'Sorry, I could not generate a response. Please try again.')
     });
   } catch (error: any) {
     console.error('Gemini API Error:', error);
@@ -180,7 +180,7 @@ app.get('/api/tips', async (req, res) => {
     const isBemba = language === 'bm';
 
     const prompt = isBemba
-      ? "Pangila icebo ca kusambilila ica kacingilila ifya pa foni nangu pa Intaneti icawama mu Zambia. Cilingile ukuba fye ulupapulo lumo, ulwakosa, nelyo ulwasuma (maximum 2-3 sentences). Lembela mu Ichibemba."
+      ? "Pangila icebo ca kusambilila, ica ku ingilila kufya pa foni nangu pa Intaneti icawama mu Zambia. Cilingile ukuba fye ulupapulo lumo, ulwakosa, nelyo ulusuma (maximum 2-3 sentences). Ndembela mu Cibemba."
       : "Generate a short, actionable daily cybersecurity awareness tip specific to the Zambian context (e.g. mobile money, social media hijack, ATM safety, public Wi-Fi). Keep it engaging and concise (maximum 2-3 sentences).";
 
     const response = await ai.models.generateContent({
@@ -204,9 +204,9 @@ app.get('/api/tips', async (req, res) => {
       "Beware of WhatsApp messages or Facebook links promising free government grants, free airtime, or free bundles. These are phishing scams designed to steal your credentials."
     ];
     const fallbackBm = [
-      "Inshila isuma iya kucingilila MoMo yenu ya kulasunga PIN muli mwebe bene. Kampani ya MTN nelyo Airtel te kuti imulile foni ukwipusha PIN yenu iyasuka.",
-      "Bomfyeni Two-Factor Authentication (2FA) pali WhatsApp yenu. Ii inshila ilatwala ubuseko mukucingilila ifyasuka fya kwingilila kuli bashipula.",
-      "Mwilatinya ama links ya pa WhatsApp nelyo Facebook aya fwaya ukumushilako amashiku ya fye nangu bundles sha fye. Ubu bufi ubwapangwa ukwiba ifya muli foni."
+      "Isungileni MoMo PIN yenu mwe bene. Kampani iya MTN neya Airtel teti imitumine foni ukwipusha pali PIN yenu, iyo ninkama yenu  .",
+      "Bomfyeni Two-Factor Authentication (2FA) pali WhatsApp yenu.",
+      "Ilukani kuma links aya pa WhatsApp neyapa Facebook aya mibepa ati ubuteko bulepela indalama nangu ama bundles aya fye. Ubu bufi ubwapangwa ukumibila."
     ];
 
     const fallbackList = language === 'bm' ? fallbackBm : fallbackEn;

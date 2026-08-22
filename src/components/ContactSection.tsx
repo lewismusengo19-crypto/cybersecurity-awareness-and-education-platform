@@ -38,7 +38,7 @@ export const ContactSection: React.FC = () => {
           <span>{translate('Help & Support Desk', 'Ubutumishi Bwa Bwafya')}</span>
         </h2>
         <p className="text-slate-400 text-sm mt-1">
-          {translate('Get in touch with local research coordinators or consult our Frequently Asked Questions (FAQ).', 'Lanshanyeni na ba coordinator besu nangu belengeni amepusho ya fye.')}
+          {translate('Get in touch with local research coordinators or consult our Frequently Asked Questions (FAQ).', 'Lanshanyeni na ba coordinator besu.')}
         </p>
       </div>
 
@@ -87,12 +87,12 @@ export const ContactSection: React.FC = () => {
 
           {/* Feedback Form */}
           <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl">
-            <h3 className="font-bold text-lg text-white mb-4">{translate('Send Us a Message', 'Tumineniko Ubuthenga')}</h3>
+            <h3 className="font-bold text-lg text-white mb-4">{translate('Send Us a Message', 'Kuti Mwatutumina Message')}</h3>
 
             {submitted ? (
               <div className="bg-green-550/10 border border-green-500/30 text-green-400 p-4 rounded-xl flex items-center space-x-3 text-sm">
                 <Check className="h-5 w-5 text-green-400" />
-                <span>{translate('Your message was submitted securely. Thank you!', 'Ubuthenga bwenu bwafika bwino. Natotela!')}</span>
+                <span>{translate('Your message was submitted securely. Thank you!', 'Message yenu naifika. Natotela!')}</span>
               </div>
             ) : (
               <form onSubmit={handleContactSubmit} className="space-y-4">
@@ -128,7 +128,7 @@ export const ContactSection: React.FC = () => {
 
                 <div>
                   <label className="block text-xs font-medium uppercase tracking-wider text-slate-400 mb-1">
-                    {translate('Your Question / Message', 'Ipusho Lyenu nangu Ubuthenga')}
+                    {translate('Your Question / Message', 'Ipusho Lyenu nangu Message')}
                   </label>
                   <textarea
                     id="contact-message"
@@ -136,7 +136,7 @@ export const ContactSection: React.FC = () => {
                     rows={4}
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
-                    placeholder={translate('I have a question about mobile money scam...', 'Nshakwete bwino pa MoMo...')}
+                    placeholder={translate('I have a question about mobile money scam...', 'Ninkwatako ilipusho pali Mobile Money Scam...')}
                     className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
                   ></textarea>
                 </div>
@@ -146,7 +146,7 @@ export const ContactSection: React.FC = () => {
                   type="submit"
                   className="w-full py-2.5 bg-green-600 hover:bg-green-500 text-white font-bold rounded-lg text-sm shadow cursor-pointer transition-all"
                 >
-                  {translate('Submit Feedback', 'Tumeni Ubuthenga')}
+                  {translate('Submit Feedback', 'Tumeni Message')}
                 </button>
               </form>
             )}
@@ -158,7 +158,7 @@ export const ContactSection: React.FC = () => {
           <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl">
             <h3 className="font-bold text-lg text-white mb-4 flex items-center space-x-2">
               <HelpCircle className="h-5 w-5 text-green-400" />
-              <span>{translate('Frequently Asked Questions', 'Amepusho ya Fye Ayebipushiwa')}</span>
+              <span>{translate('Frequently Asked Questions', 'Amepusho eyo abantu bepusha sana')}</span>
             </h3>
 
             <div className="space-y-4">

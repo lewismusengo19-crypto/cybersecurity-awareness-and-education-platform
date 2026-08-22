@@ -73,7 +73,7 @@ export const QuizSection: React.FC = () => {
           <span>{translate('Cybersecurity Quizzes', 'Ifyayako fya Kacingilila')}</span>
         </h2>
         <p className="text-slate-400 text-sm mt-1">
-          {translate('Test your awareness and verify you can identify common online threats in Zambia.', 'Eseni amano yenu pa kwishiba ubufi na bampulamafunde aba pa Intaneti.')}
+          {translate('Test your awareness and verify you can identify common online threats in Zambia.', 'Esheni amano yenu pa kwishiba ubufi eyo bamapulamafunde aba pa Intaneti.')}
         </p>
       </div>
 
@@ -82,7 +82,7 @@ export const QuizSection: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           {/* List of Available Quizzes */}
           <div className="lg:col-span-8 space-y-4">
-            <h3 className="font-bold text-lg text-white mb-2">{translate('Available Quizzes', 'Ifyayako Ifilipo')}</h3>
+            <h3 className="font-bold text-lg text-white mb-2">{translate('Available Quizzes', 'Ama Quizzes Ayalipo')}</h3>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               {quizzes.map((quiz) => {
@@ -100,7 +100,7 @@ export const QuizSection: React.FC = () => {
                         {finishedBefore && (
                           <span className="p-1.5 bg-slate-800 text-slate-300 rounded-lg text-[10px] font-mono font-bold flex items-center space-x-1">
                             <CheckCircle className="h-3 w-3 text-green-400" />
-                            <span>{translate('COMPLETED', 'PWISHILWE')}</span>
+                            <span>{translate('COMPLETED', 'MWAPWISHA')}</span>
                           </span>
                         )}
                       </div>
@@ -119,7 +119,7 @@ export const QuizSection: React.FC = () => {
                       className="w-full mt-5 py-2.5 bg-green-600 hover:bg-green-500 text-white font-bold rounded-xl text-xs flex items-center justify-center space-x-1 cursor-pointer transition-all shadow"
                     >
                       <BookOpen className="h-3.5 w-3.5" />
-                      <span>{translate('Start Quiz', 'Tampeni Icayako')}</span>
+                      <span>{translate('Start Quiz', 'Tampeni Quiz')}</span>
                     </button>
                   </div>
                 );
@@ -132,13 +132,13 @@ export const QuizSection: React.FC = () => {
             <div className="space-y-4">
               <h3 className="font-bold text-lg text-white border-b border-slate-800 pb-3 flex items-center space-x-2">
                 <BarChart2 className="h-5 w-5 text-green-500" />
-                <span>{translate('My Quiz Performance', 'Ifyayako fyandi ifyapita')}</span>
+                <span>{translate('My Quiz Performance', 'Efyo Ncitile muli quiz')}</span>
               </h3>
 
               {attempts.length === 0 ? (
                 <div className="py-8 text-center text-slate-500 space-y-2">
                   <AlertCircle className="h-8 w-8 mx-auto" />
-                  <p className="text-xs">{translate('No attempts logged yet. Complete quizzes to track progress!', 'Tapali ifyayako fyapwishwa fya kwasuka. Tampeni quizzes!')}</p>
+                  <p className="text-xs">{translate('No attempts logged yet. Complete quizzes to track progress!', 'Tampeni ama quiz ukwishiba epomuleindela!')}</p>
                 </div>
               ) : (
                 <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
@@ -160,7 +160,7 @@ export const QuizSection: React.FC = () => {
                           </span>
                         </div>
                         <div className="flex justify-between items-center text-[10px] text-slate-400 font-mono">
-                          <span>{att.score} / {att.totalQuestions} {translate('Correct', 'Amepusho ya kwasuka')}</span>
+                          <span>{att.score} / {att.totalQuestions} {translate('Correct', 'Mwa asuka bwino sana')}</span>
                           <span>{new Date(att.completedAt).toLocaleDateString()}</span>
                         </div>
                       </div>
@@ -171,10 +171,10 @@ export const QuizSection: React.FC = () => {
             </div>
 
             <div className="bg-slate-950/80 p-3.5 rounded-xl border border-slate-850 mt-4 text-[11px] text-slate-400">
-              <span className="font-bold text-green-400 block mb-0.5">{translate('Continuous Improvement', 'Amafunde yalelanda')}</span>
+              <span className="font-bold text-green-400 block mb-0.5">{translate('Continuous Improvement', 'Epo Mule endela')}</span>
               {translate(
                 'Complete quizzes in both languages to achieve certified cybersecurity readiness. Aim for a score of 100%!',
-                'Pwisheni ifyayako muli fyonse ifilipo, no kufumyapo 100% pa kwishiba ubufi bonse.'
+                'Pwisheni ama quiz muli fyonse ifitundu, no kufumyapo 100% pa kwishiba ubufi bonse.'
               )}
             </div>
           </div>
@@ -189,7 +189,7 @@ export const QuizSection: React.FC = () => {
                 {translate(activeQuiz.title_en, activeQuiz.title_bm)}
               </span>
               <h3 className="font-bold text-lg text-white">
-                {translate('Question', 'Ipusho')} {currentQuestionIndex + 1} {translate('of', 'muli')} {activeQuiz.questions.length}
+                {translate('Question', 'Ilipusho')} {currentQuestionIndex + 1} {translate('of', 'muli')} {activeQuiz.questions.length}
               </h3>
             </div>
             {/* Visual Progress ring proxy */}
@@ -255,7 +255,7 @@ export const QuizSection: React.FC = () => {
                   onClick={() => setActiveQuiz(null)}
                   className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold rounded-lg cursor-pointer transition-all"
                 >
-                  {translate('Exit Quiz', 'Lekeni Icayako')}
+                  {translate('Exit Quiz', 'Fumeniko')}
                 </button>
 
                 {!isAnswerSubmitted ? (
@@ -269,7 +269,7 @@ export const QuizSection: React.FC = () => {
                         : 'bg-green-600 hover:bg-green-500 text-white'
                     }`}
                   >
-                    {translate('Submit Answer', 'Aswani Ipusho')}
+                    {translate('Submit Answer', 'Napwisha Ukwasuka')}
                   </button>
                 ) : (
                   <button
@@ -279,8 +279,8 @@ export const QuizSection: React.FC = () => {
                   >
                     <span>
                       {currentQuestionIndex + 1 === activeQuiz.questions.length
-                        ? translate('Finish Quiz', 'Pwisha Icayako')
-                        : translate('Next Question', 'Ipusho Lilondelelo')}
+                        ? translate('Finish Quiz', 'Napwisha Quiz')
+                        : translate('Next Question', 'Ilipusho Elekonkapo')}
                     </span>
                   </button>
                 )}
@@ -301,17 +301,17 @@ export const QuizSection: React.FC = () => {
                   {translate('Quiz Complete!', 'Icayako Pwishilwe!')}
                 </h3>
                 <p className="text-slate-400 text-sm">
-                  {translate('Excellent effort! Here is your cybersecurity score details.', 'Cawama nga nshi! Nomba mone ifyo wasukile.')}
+                  {translate('Excellent effort! Here is your cybersecurity score details.', 'Cawama nga nshi! Nomba moneni ifyo mukwete.')}
                 </p>
               </div>
 
               <div className="max-w-sm mx-auto bg-slate-950/50 border border-slate-850 p-6 rounded-2xl">
                 <div className="flex justify-between items-center text-slate-300 border-b border-slate-850 pb-3 font-mono text-sm">
-                  <span>{translate('Total Questions', 'Amepusho Yonso')}:</span>
+                  <span>{translate('Total Questions', 'Amepusho Yonse')}:</span>
                   <span className="font-bold text-white">{activeQuiz.questions.length}</span>
                 </div>
                 <div className="flex justify-between items-center text-slate-300 border-b border-slate-850 py-3 font-mono text-sm">
-                  <span>{translate('Correct Answers', 'Yasukilwe Bwino')}:</span>
+                  <span>{translate('Correct Answers', 'Efyo Mwaswike Bwino')}:</span>
                   <span className="font-bold text-green-400">{score}</span>
                 </div>
                 <div className="flex justify-between items-center text-slate-300 pt-3 font-mono text-sm">
@@ -331,14 +331,14 @@ export const QuizSection: React.FC = () => {
                   className="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-xl text-xs flex items-center space-x-1 cursor-pointer transition-all"
                 >
                   <RefreshCw className="h-4 w-4" />
-                  <span>{translate('Retry Quiz', 'Eseni Kabili')}</span>
+                  <span>{translate('Retry Quiz', 'Esheni Nakabili')}</span>
                 </button>
                 <button
                   id="back-quizzes-btn"
                   onClick={() => setActiveQuiz(null)}
                   className="px-5 py-2.5 bg-green-600 hover:bg-green-500 text-white font-bold rounded-xl text-xs cursor-pointer transition-all shadow"
                 >
-                  {translate('Back to Quizzes', 'Bweleleni Kuli Quizzes')}
+                  {translate('Back to Quizzes', 'Bwekeleni Kuma Quiz')}
                 </button>
               </div>
             </div>

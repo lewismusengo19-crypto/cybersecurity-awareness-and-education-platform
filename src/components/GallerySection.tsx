@@ -12,7 +12,7 @@ export const GallerySection: React.FC = () => {
     app.logActivity('Download Content', `Downloaded infographic image: ${img.title_en}`);
     alert(app.translate(
       `Downloading Cybersecurity Infographic: "${app.translate(img.title_en, img.title_bm)}".\n(In production, this initiates a direct, secure local save of the asset.)`,
-      `Mulefuta Ifipope fya Kacingilila: "${app.translate(img.title_en, img.title_bm)}".\n(Ifyo balumbula, ici cilatwala kusunga icipe muli foni yenu.)`
+      `Sendani Ifipope pafya Kuicingilila: "${app.translate(img.title_en, img.title_bm)}".\n(Ifyo balumbula, ici cilatwala kusunga icipe muli foni yenu.)`
     ));
   };
 
@@ -30,10 +30,10 @@ export const GallerySection: React.FC = () => {
         <div>
           <h2 className="text-3xl font-bold text-white flex items-center space-x-2">
             <Image className="h-6 w-6 text-green-500" />
-            <span>{app.translate('Cybersecurity Infographics Gallery', 'Ifipope fya Kacingilila pa Intaneti')}</span>
+            <span>{app.translate('Cybersecurity Infographics Gallery', 'Ifipope fya Kuicingilila pa Intaneti')}</span>
           </h2>
           <p className="text-slate-400 text-sm mt-1">
-            {app.translate('View, zoom, and download cybersecurity educational visual diagrams.', 'Mone, kulishe fipope, no kufuta amashiku ya kacingilila.')}
+            {app.translate('View, zoom, and download cybersecurity educational visual diagrams.', 'Moneni, kusheni icipope, no kusenda amashiwi ayalelondolola pafya kuicingilila.')}
           </p>
         </div>
 
@@ -42,7 +42,7 @@ export const GallerySection: React.FC = () => {
           <input
             id="gallery-search-input"
             type="text"
-            placeholder={app.translate('Search gallery...', 'Fwayeni fipope...')}
+            placeholder={app.translate('Search gallery...', 'Fwayeni ifipope...')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-10 pr-4 py-2 rounded-xl bg-slate-900 border border-slate-800 text-white text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
@@ -96,7 +96,7 @@ export const GallerySection: React.FC = () => {
               </p>
               <div className="border-t border-slate-850 pt-3 flex justify-between items-center text-[10px] text-slate-500 font-mono">
                 <span>{img.views + 42} {app.translate('views', 'abantambile')}</span>
-                <span>{img.downloads + 12} {app.translate('downloads', 'amafuta')}</span>
+                <span>{img.downloads + 12} {app.translate('downloads', 'abasendele')}</span>
               </div>
             </div>
           </div>
@@ -147,7 +147,7 @@ export const GallerySection: React.FC = () => {
                   className="w-full py-2.5 bg-green-600 hover:bg-green-500 text-white font-bold rounded-xl flex items-center justify-center space-x-2 shadow transition-all cursor-pointer"
                 >
                   <Download className="h-4 w-4" />
-                  <span>{app.translate('Download Infographic', 'Futa Cipe')}</span>
+                  <span>{app.translate('Download Infographic', 'Sendeni ICipope')}</span>
                 </button>
                 <p className="text-[10px] text-slate-500 text-center font-mono uppercase">
                   FREE TO SHARE & RE-DISTRIBUTE

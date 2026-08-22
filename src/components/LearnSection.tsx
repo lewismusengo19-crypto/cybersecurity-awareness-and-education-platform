@@ -72,10 +72,10 @@ export const LearnSection: React.FC = () => {
         <div>
           <h2 className="text-3xl font-bold text-white flex items-center space-x-2">
             <Play className="h-6 w-6 text-green-500" />
-            <span>{translate('Cybersecurity Academy Lessons', 'Amasambililo ya Ukuicingilila')}</span>
+            <span>{translate('Cybersecurity Academy Lessons', 'Amasambililo aya Ukuicingilila')}</span>
           </h2>
           <p className="text-slate-400 text-sm mt-1">
-            {translate('Watch educational videos and download certified PDF guidelines.', 'Tambeni amavidio kabili futeni na fitabo fya kacingilila.')}
+            {translate('Watch educational videos and download certified PDF guidelines.', 'Tambeni amavidio kabili sendeni ne fitabo ifilelanda pafyo mwingaicingilila.')}
           </p>
         </div>
 
@@ -174,7 +174,7 @@ export const LearnSection: React.FC = () => {
                 {completedVideos.includes(activeVideo.id) && (
                   <div className="bg-green-550/10 border border-green-500/20 rounded-xl p-3 flex items-center space-x-3 text-xs text-green-400">
                     <CheckCircle className="h-4 w-4 text-green-400" />
-                    <span>{translate('You completed this lesson! Progress recorded securely.', 'Nwapwisha ici sambililo! Ukulunduluka nalisungwa bwino.')}</span>
+                    <span>{translate('You completed this lesson! Progress recorded securely.', 'Nwapwisha ici sambililo! Nefyo mucitele fyonse nafisungwa bwino.')}</span>
                   </div>
                 )}
               </div>
@@ -183,7 +183,7 @@ export const LearnSection: React.FC = () => {
             <div className="bg-slate-900 border border-slate-800 p-12 rounded-2xl text-center space-y-3">
               <AlertCircle className="h-12 w-12 text-slate-500 mx-auto" />
               <h4 className="text-white font-bold text-lg">{translate('No Videos Found', 'Amavidio tayasangilwe')}</h4>
-              <p className="text-slate-400 text-sm">{translate('Try modifying your search filter.', 'Eseni ukulembako amashiwi yambi.')}</p>
+              <p className="text-slate-400 text-sm">{translate('Try modifying your search filter.', 'Esheni ukulembako amashiwi yambi.')}</p>
             </div>
           )}
 
@@ -243,14 +243,14 @@ export const LearnSection: React.FC = () => {
                   </div>
 
                   <div className="flex items-center justify-between border-t border-slate-850/60 pt-2 text-[10px] text-slate-400 font-mono">
-                    <span>{pdf.downloads + 24} {translate('downloads', 'amafuta')}</span>
+                    <span>{pdf.downloads + 24} {translate('downloads', 'downloads')}</span>
                     <button
                       id={`download-pdf-${pdf.id}`}
                       onClick={() => handleDownload(pdf, 'pdf')}
                       className="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded flex items-center space-x-1 cursor-pointer"
                     >
                       <Download className="h-3.5 w-3.5" />
-                      <span>{translate('GET', 'KULA')}</span>
+                      <span>{translate('GET', 'SENDA')}</span>
                     </button>
                   </div>
                 </div>
@@ -260,11 +260,11 @@ export const LearnSection: React.FC = () => {
 
           {/* Quick Checklist Widget for Offline Learning */}
           <div className="bg-gradient-to-br from-green-900/20 to-slate-900 border border-green-800/30 rounded-2xl p-5 text-left space-y-3">
-            <h4 className="font-bold text-sm text-green-400">{translate('Zambia Cyber Safety Checklist', 'Ifyo mukose kulo kacingilila')}</h4>
+            <h4 className="font-bold text-sm text-green-400">{translate('Zambia Cyber Safety Checklist', 'Ifyo mwingaicingilila')}</h4>
             <ul className="space-y-2 text-xs text-slate-300">
               <li className="flex items-start space-x-2">
                 <span className="text-green-500 mt-0.5 font-bold">✔</span>
-                <span>{translate('Never declare MoMo PIN codes to callers.', 'Mwilaeba umuntu onse PIN ya MoMo.')}</span>
+                <span>{translate('Never declare MoMo PIN codes to callers.', 'Mwilaeba umuntu uluonse PIN ya MoMo.')}</span>
               </li>
               <li className="flex items-start space-x-2">
                 <span className="text-green-500 mt-0.5 font-bold">✔</span>
@@ -272,7 +272,7 @@ export const LearnSection: React.FC = () => {
               </li>
               <li className="flex items-start space-x-2">
                 <span className="text-green-500 mt-0.5 font-bold">✔</span>
-                <span>{translate('Reject links for "free bundles" packages.', 'Ikaneni ama link ya bundles sha fye.')}</span>
+                <span>{translate('Reject links for "free bundles" packages.', 'kaneni ama links ayalemilaya ama bundles aya fye.')}</span>
               </li>
             </ul>
           </div>
