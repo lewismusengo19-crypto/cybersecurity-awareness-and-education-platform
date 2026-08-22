@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { Shield, Play, HelpCircle, Award, CheckCircle, Smartphone, AlertTriangle, ArrowRight, Volume2, Sparkles, RefreshCw } from 'lucide-react';
+import { speechService } from '../utils/speechService';
+import { Shield, Play, HelpCircle, Award, CheckCircle, Smartphone, AlertTriangle, ArrowRight, Volume2, VolumeX, Pause, Sparkles, RefreshCw } from 'lucide-react';
 
 export const HomeSection: React.FC = () => {
   const {
@@ -15,21 +16,62 @@ export const HomeSection: React.FC = () => {
   } = useApp();
 
   const [dailyTip, setDailyTip] = useState<string>('');
-  const [loadingTip, setLoadingTip] = useState<boolean>(true);
+  const [loadingTip, setLoadingTip] = useState<boolean>(false);
+  const [speechStatus, setSpeechStatus] = useState(speechService.getStatus());
+
+  const localTipsEn = [
+    "Keep your MTN and Airtel MoMo PIN strictly to yourself. No customer care agent or network operator will ever call you to ask for your 4-digit PIN.",
+    "Turn on Two-Step Verification on your WhatsApp. Go to Settings > Account > Two-Step Verification to prevent hackers from locking you out and texting your friends for money.",
+    "Watch out for fake WhatsApp links offering free airtime, cash grants, or government subsidies. Never click unverified links or enter your personal phone numbers.",
+    "When using Mobile Money at a local agent booth, always cover your keypad with your hand while typing your PIN so bystanders cannot see it.",
+    "Never send money to someone who calls urgently claiming a family member is stranded or arrested without first verifying by calling their known phone number."
+  ];
+
+  const localTipsBm = [
+    "Isungileni MoMo PIN yenu mwebene. Kampani iya MTN nangu Airtel teti imitumine foni ukumipusha PIN, iyo ni nkama yenu.",
+    "Bomfyeni Two-Step Verification pali WhatsApp yenu pa kucilikila abapondo ukwiba account yenu.",
+    "Ilukani ku ma links aya bufi aya pa WhatsApp ayalemibepa ati ubuteko bulepela indalama sha mahala nangu ama bundles.",
+    "Nga muletuma indalama ku booth ya Mobile Money, fimbileni pa keypad pa kulemba PIN yenu ukuti umuntu emona.",
+    "Mwituma indalama kuli umuntu uulemupa foni ati lupwa lwenu ali mu bwafya ukwabula ukumutumina foni mwebe pa kumwishiba."
+  ];
+
+  useEffect(() => {
+    const unsubscribe = speechService.subscribe(() => {
+      setSpeechStatus(speechService.getStatus());
+    });
+    return () => {
+      unsubscribe();
+    };
+  }, []);
+
+  const getRandomLocalTip = () => {
+    const list = language === 'bm' ? localTipsBm : localTipsEn;
+    const filtered = list.filter(t => t !== dailyTip);
+    const pool = filtered.length > 0 ? filtered : list;
+    return pool[Math.floor(Math.random() * pool.length)];
+  };
 
   const fetchDailyTip = async () => {
+    speechService.stop();
     setLoadingTip(true);
     try {
-      const response = await fetch(`/api/tips?lang=${language}`);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 4000); // 4 second fast timeout
+
+      const response = await fetch(`/api/tips?lang=${language}&t=${Date.now()}`, {
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+
       const data = await response.json();
-      if (data.success && data.tip) {
-        setDailyTip(data.tip);
+      if (data.success && data.tip && data.tip.trim() !== '') {
+        setDailyTip(data.tip.trim());
       } else {
-        setDailyTip(translate('Protect your mobile money wallet. Never share your PIN with anyone claiming to call from customer care.', 'Sungeni indalama ishamu Mobile Money. Isungileni PIN mwebene.'));
+        setDailyTip(getRandomLocalTip());
       }
     } catch (e) {
-      console.warn('Daily tip generation failed, using fallback tip:', e);
-      setDailyTip(translate('Protect your mobile money wallet. Never share your PIN with anyone claiming to call from customer care.', 'Sungeni indalama ishamu Mobile Money. Isungeleni PIN mwebene.'));
+      console.warn('Using instant local Zambian tip:', e);
+      setDailyTip(getRandomLocalTip());
     } finally {
       setLoadingTip(false);
     }
@@ -39,16 +81,22 @@ export const HomeSection: React.FC = () => {
     fetchDailyTip();
   }, [language]);
 
-  // Audio synthesis alert of the daily tip using standard web speech synthesis (only if user presses play)
-  const speakTip = () => {
-    if ('speechSynthesis' in window) {
-      const utterance = new SpeechSynthesisUtterance(dailyTip);
-      // Try to determine voice rate/pitch for better accessibility
-      utterance.rate = 0.9;
-      // Web speech synthesis typically speaks English perfectly, Bemba might sound funny but is useful for accessibility
-      window.speechSynthesis.speak(utterance);
+  const isTipSpeaking = speechStatus.isSpeaking && speechStatus.activeTextId === 'daily-tip';
+  const isTipPaused = isTipSpeaking && speechStatus.isPaused;
+
+  const handleSpeakTip = () => {
+    if (!dailyTip) return;
+    if (isTipSpeaking) {
+      if (isTipPaused) {
+        speechService.resume();
+      } else {
+        speechService.pause();
+      }
     } else {
-      alert(translate('Web Speech API is not supported on this browser.', 'Inshila ya kulanda te kuti ibombe muli browser yenu.'));
+      speechService.speak(dailyTip, 'daily-tip', language, {
+        rate: 0.95,
+        pitch: language === 'bm' ? 1.05 : 1.0
+      });
     }
   };
 
@@ -206,20 +254,61 @@ export const HomeSection: React.FC = () => {
                   {translate('Daily Smart Security Tip', 'Icipote ca Kuicingilila Cila Bushiku')}
                 </h3>
               </div>
-              <div className="flex space-x-1">
+              <div className="flex space-x-1.5 items-center">
+                {/* Dedicated Speak / Pause Button */}
                 <button
                   id="speak-tip-btn"
-                  onClick={speakTip}
-                  className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition-all cursor-pointer"
-                  title={translate('Read Aloud', 'Belengesha')}
+                  onClick={handleSpeakTip}
+                  disabled={loadingTip || !dailyTip}
+                  className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center space-x-1.5 ${
+                    isTipSpeaking && !isTipPaused
+                      ? 'bg-green-600 text-white animate-pulse shadow-md shadow-green-600/20'
+                      : isTipPaused
+                      ? 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/30'
+                      : 'bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700'
+                  }`}
+                  title={
+                    isTipSpeaking && !isTipPaused
+                      ? translate('Pause Speech', 'Kusilika')
+                      : isTipPaused
+                      ? translate('Resume Speech', 'Konkanyapo')
+                      : translate('Listen to Tip', 'Kutika ku Cifundo')
+                  }
                 >
-                  <Volume2 className="h-4 w-4" />
+                  {isTipSpeaking && !isTipPaused ? (
+                    <>
+                      <Pause className="h-3.5 w-3.5 fill-current" />
+                      <span>{translate('Pause', 'Kusilika')}</span>
+                    </>
+                  ) : isTipPaused ? (
+                    <>
+                      <Play className="h-3.5 w-3.5 fill-current" />
+                      <span>{translate('Resume', 'Konkanyapo')}</span>
+                    </>
+                  ) : (
+                    <>
+                      <Volume2 className="h-3.5 w-3.5 text-green-400" />
+                      <span>{translate('Listen Aloud', 'Kutikeni')}</span>
+                    </>
+                  )}
                 </button>
+
+                {/* Stop button when active */}
+                {isTipSpeaking && (
+                  <button
+                    onClick={() => speechService.stop()}
+                    className="p-1.5 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 hover:bg-red-500/20 transition-all cursor-pointer"
+                    title={translate('Stop Voice', 'Lekeni')}
+                  >
+                    <VolumeX className="h-4 w-4" />
+                  </button>
+                )}
+
                 <button
                   id="refresh-tip-btn"
                   onClick={fetchDailyTip}
                   disabled={loadingTip}
-                  className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition-all cursor-pointer"
+                  className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition-all cursor-pointer"
                   title={translate('Get New Tip', 'Icipote cimbi')}
                 >
                   <RefreshCw className={`h-4 w-4 ${loadingTip ? 'animate-spin' : ''}`} />
@@ -287,9 +376,41 @@ export const HomeSection: React.FC = () => {
                   <p className="font-bold text-white text-sm mb-1">
                     {translate(notif.title_en, notif.title_bm)}
                   </p>
-                  <p className="text-slate-300">
+                  <p className="text-slate-300 mb-2">
                     {translate(notif.message_en, notif.message_bm)}
                   </p>
+                  <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-800/80">
+                    <p className="text-[10px] text-slate-500 font-mono">
+                      {notif.type === 'announcement' ? translate('URGENT BULLETIN', 'BULLETIN') : translate('LESSON UPDATE', 'UPDATE')}
+                    </p>
+                    <button
+                      onClick={() => {
+                        const script = `${translate(notif.title_en, notif.title_bm)}. ${translate(notif.message_en, notif.message_bm)}`;
+                        const notifKey = `notif-${notif.id}`;
+                        if (speechStatus.isSpeaking && speechStatus.activeTextId === notifKey) {
+                          speechService.stop();
+                        } else {
+                          speechService.speak(script, notifKey, language, {
+                            rate: 0.95,
+                            pitch: language === 'bm' ? 1.05 : 1.0
+                          });
+                        }
+                      }}
+                      className={`inline-flex items-center space-x-1 px-2 py-0.5 rounded text-[10px] font-bold transition-all cursor-pointer ${
+                        speechStatus.isSpeaking && speechStatus.activeTextId === `notif-${notif.id}`
+                          ? 'bg-orange-500 text-white animate-pulse'
+                          : 'bg-slate-800 hover:bg-slate-700 text-slate-300'
+                      }`}
+                      title={translate('Listen to alert', 'Kutika ku machenjelo')}
+                    >
+                      <Volume2 className="h-3 w-3" />
+                      <span>
+                        {speechStatus.isSpeaking && speechStatus.activeTextId === `notif-${notif.id}`
+                          ? translate('Playing...', 'Ulelanda...')
+                          : translate('Listen', 'Kutika')}
+                      </span>
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>

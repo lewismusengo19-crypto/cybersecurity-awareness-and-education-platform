@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { Shield, Languages, Type, Eye, LogIn, LogOut, User as UserIcon, X, Menu, Settings } from 'lucide-react';
+import { Shield, Languages, Type, Eye, LogIn, LogOut, User as UserIcon, X, Menu, Settings, KeyRound, Sparkles, CheckCircle2, ArrowRight, Lock } from 'lucide-react';
 
 export const Navbar: React.FC = () => {
   const {
@@ -18,13 +18,14 @@ export const Navbar: React.FC = () => {
     login,
     register,
     resetPassword,
+    quickLogin,
     errorMsg,
     setErrorMsg,
     translate
   } = useApp();
 
   const [showAuthModal, setShowAuthModal] = useState(false);
-  const [isRegistering, setIsRegistering] = useState(false);
+  const [authMode, setAuthMode] = useState<'login' | 'register' | 'reset'>('login');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showSettingsDropdown, setShowSettingsDropdown] = useState(false);
 
@@ -34,18 +35,29 @@ export const Navbar: React.FC = () => {
   const [name, setName] = useState('');
   const [regRole, setRegRole] = useState<'admin' | 'learner'>('learner');
   const [authLoading, setAuthLoading] = useState(false);
+  const [resetSuccessMsg, setResetSuccessMsg] = useState<string | null>(null);
 
   const handleAuthSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setAuthLoading(true);
     setErrorMsg(null);
+    setResetSuccessMsg(null);
     try {
-      if (isRegistering) {
+      if (authMode === 'register') {
         await register(email, password, name, regRole);
-      } else {
+        setShowAuthModal(false);
+      } else if (authMode === 'login') {
         await login(email, password);
+        setShowAuthModal(false);
+      } else if (authMode === 'reset') {
+        await resetPassword(email, password);
+        // Auto sign in with the new password
+        await login(email, password);
+        setResetSuccessMsg(translate('Password successfully reset! Signed in.', 'Password naicenjwa bwino! Mwaingila.'));
+        setTimeout(() => {
+          setShowAuthModal(false);
+        }, 1200);
       }
-      setShowAuthModal(false);
       setEmail('');
       setPassword('');
       setName('');
@@ -56,12 +68,18 @@ export const Navbar: React.FC = () => {
     }
   };
 
-  const handleResetRequest = async () => {
-    if (!email) {
-      setErrorMsg(translate('Please enter your email address first.', 'Tampilenipo ukwingisha email yenu.'));
-      return;
+  const handleQuickLogin = async (role: 'admin' | 'learner') => {
+    setAuthLoading(true);
+    setErrorMsg(null);
+    setResetSuccessMsg(null);
+    try {
+      await quickLogin(role);
+      setShowAuthModal(false);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setAuthLoading(false);
     }
-    await resetPassword(email);
   };
 
   const menuItems = [
@@ -243,7 +261,9 @@ export const Navbar: React.FC = () => {
               <button
                 id="login-trigger-btn"
                 onClick={() => {
-                  setIsRegistering(false);
+                  setAuthMode('login');
+                  setErrorMsg(null);
+                  setResetSuccessMsg(null);
                   setShowAuthModal(true);
                 }}
                 className={`px-4 py-2 rounded-lg font-medium text-sm flex items-center space-x-2 cursor-pointer transition-all duration-200 ${
@@ -366,7 +386,9 @@ export const Navbar: React.FC = () => {
               <button
                 id="login-trigger-mobile"
                 onClick={() => {
-                  setIsRegistering(false);
+                  setAuthMode('login');
+                  setErrorMsg(null);
+                  setResetSuccessMsg(null);
                   setShowAuthModal(true);
                   setMobileMenuOpen(false);
                 }}
@@ -392,34 +414,157 @@ export const Navbar: React.FC = () => {
             }`}>
             <button
               id="close-auth-modal"
-              onClick={() => setShowAuthModal(false)}
-              className="absolute top-4 right-4 p-1 rounded-full hover:bg-slate-800 transition-colors cursor-pointer"
+              onClick={() => {
+                setShowAuthModal(false);
+                setErrorMsg(null);
+                setResetSuccessMsg(null);
+              }}
+              className="absolute top-4 right-4 p-1 rounded-full hover:bg-slate-800 transition-colors cursor-pointer text-slate-400 hover:text-white"
             >
               <X className="h-5 w-5" />
             </button>
 
-            <div className="text-center mb-6">
-              <Shield className={`h-12 w-12 mx-auto mb-2 ${highContrast ? 'text-yellow-400' : 'text-green-500'}`} />
-              <h3 className="text-2xl font-bold tracking-tight">
-                {isRegistering 
-                  ? translate('Create Account', 'Pangeni Account Iyipya') 
-                  : translate('Welcome Back', 'Mwaisenipo Mukwai')}
+            {/* Modal Header */}
+            <div className="text-center mb-5">
+              <Shield className={`h-10 w-10 mx-auto mb-2 ${highContrast ? 'text-yellow-400' : 'text-green-500'}`} />
+              <h3 className="text-xl font-bold tracking-tight">
+                {authMode === 'register' 
+                  ? translate('Create Academy Account', 'Pangeni Account Iyipya') 
+                  : authMode === 'reset'
+                    ? translate('Reset Password', 'Cenjeni Password')
+                    : translate('Welcome Back', 'Mwaisenipo Mukwai')}
               </h3>
-              <p className="text-sm text-slate-400 mt-1">
-                {isRegistering 
-                  ? translate('Learn and secure your online presence.', 'Sambilileni pa kuicingilila bwino.') 
-                  : translate('Sign in to resume lessons and track quiz performance.', 'Ingileni mukonkanyepo ifisambilisho.')}
+              <p className="text-xs text-slate-400 mt-1">
+                {authMode === 'register' 
+                  ? translate('Join Zambia Cybersecurity Academy and track your progress.', 'Sambilileni pa kuicingilila bwino mu Zambia.') 
+                  : authMode === 'reset'
+                    ? translate('Set a new password or restore access immediately.', 'Bikeni password ipya pa kuti mwingile bwangu.')
+                    : translate('Sign in to continue lessons, quizzes, and security certifications.', 'Ingileni mukonkanyepo ifisambilisho.')}
               </p>
             </div>
 
-            {errorMsg && (
-              <div className="bg-red-550/25 border border-red-500 text-red-200 text-xs px-3 py-2 rounded mb-4 font-mono whitespace-pre-line">
-                {errorMsg}
+            {/* Mode Switcher Tabs */}
+            <div className="flex rounded-lg bg-slate-800/80 p-1 mb-4 border border-slate-700/60">
+              <button
+                type="button"
+                id="tab-mode-login"
+                onClick={() => {
+                  setAuthMode('login');
+                  setErrorMsg(null);
+                  setResetSuccessMsg(null);
+                }}
+                className={`flex-1 py-1.5 text-xs font-semibold rounded-md transition-all cursor-pointer ${
+                  authMode === 'login'
+                    ? 'bg-green-600 text-white shadow'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                {translate('Sign In', 'Ingileni')}
+              </button>
+              <button
+                type="button"
+                id="tab-mode-register"
+                onClick={() => {
+                  setAuthMode('register');
+                  setErrorMsg(null);
+                  setResetSuccessMsg(null);
+                }}
+                className={`flex-1 py-1.5 text-xs font-semibold rounded-md transition-all cursor-pointer ${
+                  authMode === 'register'
+                    ? 'bg-orange-500 text-white shadow'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                {translate('Register', 'Lembelembeni')}
+              </button>
+              <button
+                type="button"
+                id="tab-mode-reset"
+                onClick={() => {
+                  setAuthMode('reset');
+                  setErrorMsg(null);
+                  setResetSuccessMsg(null);
+                }}
+                className={`flex-1 py-1.5 text-xs font-semibold rounded-md transition-all cursor-pointer ${
+                  authMode === 'reset'
+                    ? 'bg-blue-600 text-white shadow'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                {translate('Reset', 'Cenjeni')}
+              </button>
+            </div>
+
+            {/* Success Message Banner */}
+            {resetSuccessMsg && (
+              <div className="bg-green-950/80 border border-green-500 text-green-200 text-xs px-3 py-2.5 rounded-lg mb-4 flex items-center space-x-2">
+                <CheckCircle2 className="h-4 w-4 text-green-400 shrink-0" />
+                <span>{resetSuccessMsg}</span>
               </div>
             )}
 
-            <form onSubmit={handleAuthSubmit} className="space-y-4">
-              {isRegistering && (
+            {/* Error Message Banner with Smart 1-Click Recovery Actions */}
+            {errorMsg && (
+              <div className="bg-red-950/70 border border-red-500/80 text-red-200 text-xs p-3 rounded-lg mb-4 space-y-2">
+                <div className="font-mono">{errorMsg}</div>
+                
+                {/* If error is 'already registered', offer 1-click switch to sign in */}
+                {errorMsg.toLowerCase().includes('already registered') && (
+                  <div className="pt-2 border-t border-red-800/60 flex items-center justify-between">
+                    <span className="text-[11px] text-red-300">
+                      {translate('Account exists with this email:', 'Account eipo kale:')}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAuthMode('login');
+                        setErrorMsg(null);
+                      }}
+                      className="px-2.5 py-1 bg-red-600 hover:bg-red-500 text-white rounded text-[11px] font-bold flex items-center space-x-1 cursor-pointer transition-colors"
+                    >
+                      <span>{translate('Switch to Sign In', 'Ingileni')}</span>
+                      <ArrowRight className="h-3 w-3" />
+                    </button>
+                  </div>
+                )}
+
+                {/* If error is 'incorrect password', offer instant reset or preset login */}
+                {errorMsg.toLowerCase().includes('incorrect password') && (
+                  <div className="pt-2 border-t border-red-800/60 space-y-1.5">
+                    <div className="text-[11px] text-red-300">
+                      {translate('Forgot your password? Reset or sign in with default credentials:', 'Mwalaba password? Cenjeni pano:')}
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          setPassword('password123');
+                          await resetPassword(email || 'lewismusengo19@gmail.com', 'password123');
+                          await login(email || 'lewismusengo19@gmail.com', 'password123');
+                          setShowAuthModal(false);
+                        }}
+                        className="px-2 py-1 bg-amber-600 hover:bg-amber-500 text-white rounded text-[11px] font-semibold cursor-pointer transition-colors"
+                      >
+                        {translate('Reset to "password123" & Sign In', 'Bikeni "password123" & Ingileni')}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setAuthMode('reset');
+                          setErrorMsg(null);
+                        }}
+                        className="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600 rounded text-[11px] font-semibold cursor-pointer"
+                      >
+                        {translate('Set New Password', 'Cenjeni')}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            <form onSubmit={handleAuthSubmit} className="space-y-3.5">
+              {authMode === 'register' && (
                 <div>
                   <label className="block text-xs font-medium uppercase tracking-wider text-slate-400 mb-1">
                     {translate('Full Name', 'Ishina Lyenu')}
@@ -453,7 +598,9 @@ export const Navbar: React.FC = () => {
 
               <div>
                 <label className="block text-xs font-medium uppercase tracking-wider text-slate-400 mb-1">
-                  {translate('Password', 'Ishiwi lya Kufisa')}
+                  {authMode === 'reset' 
+                    ? translate('New Password (min 4 characters)', 'Password Ipya') 
+                    : translate('Password', 'Ishiwi lya Kufisa')}
                 </label>
                 <input
                   id="auth-password-input"
@@ -464,18 +611,33 @@ export const Navbar: React.FC = () => {
                   placeholder="••••••••"
                   className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
                 />
-                {!isRegistering && (
-                  <button
-                    type="button"
-                    onClick={handleResetRequest}
-                    className="text-xs text-green-400 hover:underline mt-1 block cursor-pointer"
-                  >
-                    {translate('Forgot Password?', 'Mwalaba Password?')}
-                  </button>
+                {authMode === 'login' && (
+                  <div className="flex justify-between items-center mt-1">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAuthMode('reset');
+                        setErrorMsg(null);
+                      }}
+                      className="text-xs text-green-400 hover:underline cursor-pointer"
+                    >
+                      {translate('Forgot Password?', 'Mwalaba Password?')}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEmail('lewismusengo19@gmail.com');
+                        setPassword('password123');
+                      }}
+                      className="text-[11px] text-slate-400 hover:text-slate-200 cursor-pointer"
+                    >
+                      {translate('Use Admin credentials', 'Bomfyeni ifya Admin')}
+                    </button>
+                  </div>
                 )}
               </div>
 
-              {isRegistering && (
+              {authMode === 'register' && (
                 <div>
                   <label className="block text-xs font-medium uppercase tracking-wider text-slate-400 mb-2">
                     {translate('Account Role', 'Efyo Account Icita')}
@@ -507,8 +669,8 @@ export const Navbar: React.FC = () => {
                 </div>
               )}
 
-              {/* Password strength meter hint for security */}
-              {isRegistering && password.length > 0 && (
+              {/* Password strength meter */}
+              {(authMode === 'register' || authMode === 'reset') && password.length > 0 && (
                 <div className="space-y-1">
                   <div className="flex justify-between text-[10px] text-slate-400 font-mono">
                     <span>{translate('Password Security Strength', 'Ukukosha kwa Password')}:</span>
@@ -531,35 +693,59 @@ export const Navbar: React.FC = () => {
                 className={`w-full py-2.5 rounded-lg font-bold text-sm cursor-pointer flex items-center justify-center space-x-2 transition-all ${
                   highContrast 
                     ? 'bg-yellow-400 text-black hover:bg-yellow-300' 
-                    : isRegistering
+                    : authMode === 'register'
                       ? 'bg-orange-500 hover:bg-orange-600 text-white shadow'
-                      : 'bg-green-600 hover:bg-green-500 text-white shadow'
+                      : authMode === 'reset'
+                        ? 'bg-blue-600 hover:bg-blue-500 text-white shadow'
+                        : 'bg-green-600 hover:bg-green-500 text-white shadow'
                 }`}
               >
                 <span>
                   {authLoading 
                     ? translate('Processing...', 'Cilebombelapo...') 
-                    : isRegistering 
-                      ? translate('Register Now', 'Pangeni Account') 
-                      : translate('Sign In Securely', 'Ingileni')}
+                    : authMode === 'register' 
+                      ? translate('Register Account', 'Pangeni Account') 
+                      : authMode === 'reset'
+                        ? translate('Set New Password & Sign In', 'Cenjeni & Ingileni')
+                        : translate('Sign In Securely', 'Ingileni')}
                 </span>
               </button>
             </form>
 
-            <div className="border-t border-slate-800 mt-5 pt-4 text-center">
-              <button
-                type="button"
-                onClick={() => {
-                  setIsRegistering(!isRegistering);
-                  setErrorMsg(null);
-                }}
-                className="text-xs text-slate-400 hover:text-white cursor-pointer hover:underline"
-              >
-                {isRegistering 
-                  ? translate('Already have an account? Sign In', 'Mwalikwata kale account? Ingileni') 
-                  : translate("Don't have an account? Sign Up", "Tamwakwata account? Pangeni account")}
-              </button>
+            {/* Quick 1-Click Demo Login Bar */}
+            <div className="border-t border-slate-800 mt-5 pt-4">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider flex items-center space-x-1">
+                  <Sparkles className="h-3 w-3 text-amber-400" />
+                  <span>{translate('1-Click Demo Sign-in', 'Ukwingila kwa Bwangu')}</span>
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  id="quick-login-admin"
+                  onClick={() => handleQuickLogin('admin')}
+                  disabled={authLoading}
+                  className="py-1.5 px-2 bg-slate-800 hover:bg-orange-950/60 border border-slate-700 hover:border-orange-500/60 text-orange-300 rounded-lg text-xs font-semibold cursor-pointer transition-colors flex items-center justify-center space-x-1.5"
+                  title="Sign in as Admin Lewis Musengo"
+                >
+                  <Shield className="h-3.5 w-3.5 text-orange-400 shrink-0" />
+                  <span className="truncate">Admin (Lewis)</span>
+                </button>
+                <button
+                  type="button"
+                  id="quick-login-learner"
+                  onClick={() => handleQuickLogin('learner')}
+                  disabled={authLoading}
+                  className="py-1.5 px-2 bg-slate-800 hover:bg-green-950/60 border border-slate-700 hover:border-green-500/60 text-green-300 rounded-lg text-xs font-semibold cursor-pointer transition-colors flex items-center justify-center space-x-1.5"
+                  title="Sign in as Learner Chanda Mulenga"
+                >
+                  <UserIcon className="h-3.5 w-3.5 text-green-400 shrink-0" />
+                  <span className="truncate">Learner Demo</span>
+                </button>
+              </div>
             </div>
+
           </div>
         </div>
       </div>

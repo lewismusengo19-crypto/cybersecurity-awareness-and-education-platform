@@ -48,7 +48,8 @@ interface AppContextType {
   login: (email: string, pass: string) => Promise<void>;
   register: (email: string, pass: string, name: string, role: 'admin' | 'learner') => Promise<void>;
   logout: () => Promise<void>;
-  resetPassword: (email: string) => Promise<void>;
+  resetPassword: (email: string, newPassword?: string) => Promise<boolean>;
+  quickLogin: (role: 'admin' | 'learner') => Promise<void>;
 
   // Data Collections
   videos: VideoContent[];
@@ -224,19 +225,47 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => {
     try {
       const storedUsers = localStorage.getItem('cyber_academy_users');
-      if (!storedUsers) {
-        const initialUsers = [
-          {
-            uid: 'seeded-admin',
-            email: 'lewismusengo19@gmail.com',
-            password: 'password123',
-            displayName: 'Lewis Musengo',
-            role: 'admin',
-            createdAt: new Date().toISOString()
-          }
-        ];
-        localStorage.setItem('cyber_academy_users', JSON.stringify(initialUsers));
+      let usersList: any[] = [];
+      if (storedUsers) {
+        try {
+          usersList = JSON.parse(storedUsers);
+        } catch (_) {
+          usersList = [];
+        }
       }
+
+      // Ensure the Admin user always exists
+      const adminEmail = 'lewismusengo19@gmail.com';
+      const adminIndex = usersList.findIndex((u: any) => u.email?.toLowerCase() === adminEmail.toLowerCase());
+      if (adminIndex === -1) {
+        usersList.unshift({
+          uid: 'seeded-admin',
+          email: adminEmail,
+          password: 'password123',
+          displayName: 'Lewis Musengo (Admin)',
+          role: 'admin',
+          createdAt: new Date().toISOString()
+        });
+      } else {
+        // Ensure role is admin
+        usersList[adminIndex].role = 'admin';
+      }
+
+      // Ensure a demo learner user also exists
+      const learnerEmail = 'learner@zambiacyber.org';
+      const learnerIndex = usersList.findIndex((u: any) => u.email?.toLowerCase() === learnerEmail.toLowerCase());
+      if (learnerIndex === -1) {
+        usersList.push({
+          uid: 'seeded-learner',
+          email: learnerEmail,
+          password: 'password123',
+          displayName: 'Chanda Mulenga (Learner)',
+          role: 'learner',
+          createdAt: new Date().toISOString()
+        });
+      }
+
+      localStorage.setItem('cyber_academy_users', JSON.stringify(usersList));
     } catch (e) {
       console.warn('Error seeding default users:', e);
     }
@@ -463,10 +492,71 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setProfile(null);
   };
 
-  const resetPassword = async (email: string) => {
+  const resetPassword = async (email: string, newPassword?: string): Promise<boolean> => {
     setErrorMsg(null);
-    alert(`Password reset link requested for ${email}. (Simulated local response: we have logged your request securely).`);
-    await logActivity('Reset Password', `Requested password reset link for ${email}`);
+    try {
+      if (!email) {
+        throw new Error(language === 'bm' ? 'Lembeni email yenu mukwai.' : 'Please enter your email address.');
+      }
+      const targetPass = newPassword && newPassword.trim().length >= 4 ? newPassword.trim() : 'password123';
+      const storedUsers = localStorage.getItem('cyber_academy_users');
+      let usersList = storedUsers ? JSON.parse(storedUsers) : [];
+
+      const userIndex = usersList.findIndex((u: any) => u.email?.toLowerCase() === email.toLowerCase());
+      if (userIndex !== -1) {
+        // Update existing user password
+        usersList[userIndex].password = targetPass;
+        localStorage.setItem('cyber_academy_users', JSON.stringify(usersList));
+      } else {
+        // Auto-create/seed the user so they are immediately unblocked
+        const finalRole = email.toLowerCase() === 'lewismusengo19@gmail.com' ? 'admin' : 'learner';
+        const uid = 'user-' + Math.random().toString(36).substr(2, 9);
+        const newUser = {
+          uid,
+          email: email.toLowerCase(),
+          password: targetPass,
+          displayName: email.split('@')[0],
+          role: finalRole,
+          createdAt: new Date().toISOString()
+        };
+        usersList.push(newUser);
+        localStorage.setItem('cyber_academy_users', JSON.stringify(usersList));
+      }
+
+      await logActivity('Password Reset', `Password securely updated for ${email}`);
+      return true;
+    } catch (e: any) {
+      setErrorMsg(e.message || 'Password reset failed.');
+      throw e;
+    }
+  };
+
+  const quickLogin = async (role: 'admin' | 'learner') => {
+    setErrorMsg(null);
+    try {
+      const email = role === 'admin' ? 'lewismusengo19@gmail.com' : 'learner@zambiacyber.org';
+      const displayName = role === 'admin' ? 'Lewis Musengo (Admin)' : 'Chanda Mulenga (Learner)';
+      const uid = role === 'admin' ? 'seeded-admin' : 'seeded-learner';
+
+      const userProfile: UserProfile = {
+        uid,
+        email,
+        displayName,
+        role,
+        createdAt: new Date().toISOString()
+      };
+
+      const session = { user: { uid, email }, profile: userProfile };
+      localStorage.setItem('cyber_academy_session', JSON.stringify(session));
+
+      setUser(session.user);
+      setProfile(userProfile);
+
+      await logActivity('Quick Demo Login', `Authenticated as ${role} via quick demo access`);
+    } catch (e: any) {
+      console.error('Quick login failed:', e);
+      setErrorMsg(e.message || 'Quick login failed.');
+    }
   };
 
   // Content modifiers (Admin)
@@ -649,7 +739,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       highContrast, setHighContrast,
       activeSection, setActiveSection,
       user, profile, loadingAuth, errorMsg, setErrorMsg,
-      login, register, logout, resetPassword,
+      login, register, logout, resetPassword, quickLogin,
       videos, images, pdfs, quizzes, attempts, auditLogs, notifications,
       addVideo, addImage, addPdf, addQuiz, deleteQuiz, addQuizAttempt, logActivity, addNotification,
       translate

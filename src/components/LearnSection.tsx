@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { Play, Download, Search, FileText, CheckCircle, Bookmark, Eye, Maximize, AlertCircle } from 'lucide-react';
+import { Play, Download, Search, FileText, CheckCircle, Bookmark, Eye, Maximize, AlertCircle, Volume2 } from 'lucide-react';
 import { VideoContent, PDFMaterial } from '../types';
+import { AudioVoiceoverBar } from './AudioVoiceoverBar';
 
 export const LearnSection: React.FC = () => {
   const {
@@ -161,9 +162,20 @@ export const LearnSection: React.FC = () => {
                   </div>
                 </div>
 
+                {/* Audio Voiceover Bar for Active Lesson */}
+                <div className="border-t border-slate-850 pt-4">
+                  <AudioVoiceoverBar
+                    id={`lesson-voiceover-${activeVideo.id}`}
+                    titleEn={activeVideo.title_en}
+                    titleBm={activeVideo.title_bm}
+                    narrativeEn={activeVideo.description_en}
+                    narrativeBm={activeVideo.description_bm}
+                  />
+                </div>
+
                 <div className="border-t border-slate-850 pt-4">
                   <h4 className="text-xs uppercase tracking-wider font-bold text-slate-400 mb-2">
-                    {translate('Description', 'Ifilondolwelwe')}
+                    {translate('Description & Key Takeaways', 'Ifilondolwelwe na Masambililo')}
                   </h4>
                   <p className="text-slate-300 text-sm leading-relaxed">
                     {translate(activeVideo.description_en, activeVideo.description_bm)}

@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { Image, ZoomIn, Download, X, Search, Maximize2 } from 'lucide-react';
+import { Image, ZoomIn, Download, X, Search, Maximize2, Volume2 } from 'lucide-react';
 import { ImageContent } from '../types';
+import { AudioVoiceoverBar } from './AudioVoiceoverBar';
 
 export const GallerySection: React.FC = () => {
   const app = useApp();
@@ -87,13 +88,28 @@ export const GallerySection: React.FC = () => {
             </div>
 
             {/* Image info */}
-            <div className="p-5 space-y-2">
-              <h4 className="font-bold text-white text-base line-clamp-1">
-                {app.translate(img.title_en, img.title_bm)}
-              </h4>
-              <p className="text-xs text-slate-400 line-clamp-3 leading-relaxed">
-                {app.translate(img.description_en, img.description_bm)}
-              </p>
+            <div className="p-5 space-y-3">
+              <div>
+                <h4 className="font-bold text-white text-base line-clamp-1">
+                  {app.translate(img.title_en, img.title_bm)}
+                </h4>
+                <p className="text-xs text-slate-400 line-clamp-3 leading-relaxed mt-1">
+                  {app.translate(img.description_en, img.description_bm)}
+                </p>
+              </div>
+
+              {/* Compact Audio Voiceover Trigger */}
+              <div className="pt-1">
+                <AudioVoiceoverBar
+                  id={`gallery-card-voice-${img.id}`}
+                  titleEn={img.title_en}
+                  titleBm={img.title_bm}
+                  narrativeEn={img.description_en}
+                  narrativeBm={img.description_bm}
+                  compact={true}
+                />
+              </div>
+
               <div className="border-t border-slate-850 pt-3 flex justify-between items-center text-[10px] text-slate-500 font-mono">
                 <span>{img.views + 42} {app.translate('views', 'abantambile')}</span>
                 <span>{img.downloads + 12} {app.translate('downloads', 'abasendele')}</span>
@@ -125,7 +141,7 @@ export const GallerySection: React.FC = () => {
             </div>
 
             {/* Info details panel */}
-            <div className="p-6 md:w-80 flex flex-col justify-between bg-slate-900 text-left border-t md:border-t-0 md:border-l border-slate-800">
+            <div className="p-6 md:w-88 flex flex-col justify-between bg-slate-900 text-left border-t md:border-t-0 md:border-l border-slate-800 overflow-y-auto max-h-[80vh]">
               <div className="space-y-4">
                 <div className="inline-flex items-center space-x-1 px-2.5 py-1 bg-green-500/10 border border-green-500/30 text-green-400 rounded-full text-[10px] font-mono">
                   <span>CERTIFIED LESSON IMAGE</span>
@@ -138,6 +154,17 @@ export const GallerySection: React.FC = () => {
                 <p className="text-slate-300 text-sm leading-relaxed">
                   {app.translate(activeImage.description_en, activeImage.description_bm)}
                 </p>
+
+                {/* Full Audio Voiceover in Modal */}
+                <div className="pt-2">
+                  <AudioVoiceoverBar
+                    id={`gallery-modal-voice-${activeImage.id}`}
+                    titleEn={activeImage.title_en}
+                    titleBm={activeImage.title_bm}
+                    narrativeEn={activeImage.description_en}
+                    narrativeBm={activeImage.description_bm}
+                  />
+                </div>
               </div>
 
               <div className="border-t border-slate-800 pt-6 mt-6 space-y-3">

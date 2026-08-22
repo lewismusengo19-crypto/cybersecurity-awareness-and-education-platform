@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
-import { Shield, Send, Sparkles, Trash2, Smartphone, Key, HelpCircle } from 'lucide-react';
+import { speechService } from '../utils/speechService';
+import { Shield, Send, Sparkles, Trash2, Smartphone, Key, HelpCircle, Volume2, VolumeX, Pause, Play, Gauge, Radio } from 'lucide-react';
 
 interface ChatMessage {
   id: string;
@@ -13,7 +14,21 @@ export const ChatbotSection: React.FC = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [userInput, setUserInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [speechStatus, setSpeechStatus] = useState(speechService.getStatus());
+  const [autoSpeak, setAutoSpeak] = useState<boolean>(false);
+  const [speechRate, setSpeechRate] = useState<number>(1.0);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Subscribe to speech synthesis status
+  useEffect(() => {
+    const unsubscribe = speechService.subscribe(() => {
+      setSpeechStatus(speechService.getStatus());
+    });
+    return () => {
+      unsubscribe();
+      speechService.stop();
+    };
+  }, []);
 
   // Set up welcome message on load
   useEffect(() => {
@@ -34,8 +49,32 @@ export const ChatbotSection: React.FC = () => {
     scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  const handleSpeakMessage = (msgId: string, text: string) => {
+    if (speechStatus.isSpeaking && speechStatus.activeTextId === msgId) {
+      if (speechStatus.isPaused) {
+        speechService.resume();
+      } else {
+        speechService.pause();
+      }
+    } else {
+      speechService.speak(text, msgId, language, {
+        rate: speechRate,
+        pitch: language === 'bm' ? 1.05 : 1.0
+      });
+    }
+  };
+
+  const cycleSpeechRate = () => {
+    const rates = [0.8, 1.0, 1.25];
+    const nextIndex = (rates.indexOf(speechRate) + 1) % rates.length;
+    setSpeechRate(rates[nextIndex]);
+  };
+
   const sendMessage = async (text: string) => {
     if (!text.trim() || loading) return;
+
+    // Stop ongoing speech before sending new query
+    speechService.stop();
 
     const userMsg: ChatMessage = {
       id: 'usr-' + Date.now(),
@@ -61,11 +100,22 @@ export const ChatbotSection: React.FC = () => {
 
       const data = await response.json();
       if (data.success && data.reply) {
+        const newMsgId = 'ai-' + Date.now();
         setMessages(prev => [...prev, {
-          id: 'ai-' + Date.now(),
+          id: newMsgId,
           role: 'model',
           content: data.reply
         }]);
+
+        // Auto read if learner enabled auto-speak
+        if (autoSpeak) {
+          setTimeout(() => {
+            speechService.speak(data.reply, newMsgId, language, {
+              rate: speechRate,
+              pitch: language === 'bm' ? 1.05 : 1.0
+            });
+          }, 200);
+        }
       } else {
         setMessages(prev => [...prev, {
           id: 'err-' + Date.now(),
@@ -92,6 +142,7 @@ export const ChatbotSection: React.FC = () => {
   };
 
   const clearChat = () => {
+    speechService.stop();
     setMessages([
       {
         id: 'welcome',
@@ -124,9 +175,9 @@ export const ChatbotSection: React.FC = () => {
   ];
 
   return (
-    <div className="max-w-4xl mx-auto h-[600px] flex flex-col bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl text-left" id="chatbot-section">
+    <div className="max-w-4xl mx-auto h-[620px] flex flex-col bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl text-left" id="chatbot-section">
       {/* Bot Chat Header */}
-      <div className="px-6 py-4 bg-slate-950 border-b border-slate-800 flex items-center justify-between">
+      <div className="px-6 py-4 bg-slate-950 border-b border-slate-800 flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center space-x-3">
           <div className="p-2 bg-green-500/10 border border-green-500/30 text-green-400 rounded-xl animate-pulse">
             <Shield className="h-5 w-5" />
@@ -135,40 +186,133 @@ export const ChatbotSection: React.FC = () => {
             <h3 className="font-bold text-white text-base leading-tight">Ba Cyber Advisor</h3>
             <span className="text-[10px] text-green-400 font-mono flex items-center space-x-1 mt-0.5">
               <span className="h-1.5 w-1.5 bg-green-500 rounded-full"></span>
-              <span>GEMINI MODEL ACCORD ACTIVE • {language.toUpperCase()}</span>
+              <span>GEMINI MODEL • TEXT-TO-SPEECH ACTIVE • {language.toUpperCase()}</span>
             </span>
           </div>
         </div>
 
-        <button
-          id="clear-chat-btn"
-          onClick={clearChat}
-          className="p-2 rounded-lg bg-slate-900 border border-slate-800 text-slate-400 hover:text-red-400 hover:border-red-500/30 transition-all cursor-pointer"
-          title={translate('Clear Chat', 'Lekeni chat')}
-        >
-          <Trash2 className="h-4 w-4" />
-        </button>
+        {/* Header Audio & Action Controls */}
+        <div className="flex items-center space-x-2">
+          {/* Speed Toggle */}
+          <button
+            onClick={cycleSpeechRate}
+            className="px-2 py-1 bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-300 text-[10px] font-mono font-bold rounded-lg flex items-center space-x-1 cursor-pointer transition-all"
+            title={translate('Voice Speed', 'Ulubilo lwa Ishiwi')}
+          >
+            <Gauge className="h-3 w-3 text-green-400" />
+            <span>{speechRate}x</span>
+          </button>
+
+          {/* Auto Read Aloud Toggle */}
+          <button
+            onClick={() => setAutoSpeak(!autoSpeak)}
+            className={`px-2.5 py-1 border text-[10px] font-bold rounded-lg flex items-center space-x-1 transition-all cursor-pointer ${
+              autoSpeak
+                ? 'bg-green-600/20 border-green-500/50 text-green-400'
+                : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
+            }`}
+            title={translate('Auto-speak incoming responses', 'Kulanda amashiwi ayapokelelwa')}
+          >
+            <Volume2 className="h-3 w-3" />
+            <span>{autoSpeak ? translate('Voice ON', 'Voice ON') : translate('Voice OFF', 'Voice OFF')}</span>
+          </button>
+
+          {/* Stop active speech button if speaking */}
+          {speechStatus.isSpeaking && (
+            <button
+              onClick={() => speechService.stop()}
+              className="p-1.5 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 hover:bg-red-500/20 transition-all cursor-pointer"
+              title={translate('Stop Voice', 'Lekeni kulanda')}
+            >
+              <VolumeX className="h-4 w-4" />
+            </button>
+          )}
+
+          <button
+            id="clear-chat-btn"
+            onClick={clearChat}
+            className="p-2 rounded-lg bg-slate-900 border border-slate-800 text-slate-400 hover:text-red-400 hover:border-red-500/30 transition-all cursor-pointer"
+            title={translate('Clear Chat', 'Lekeni chat')}
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+        </div>
       </div>
 
       {/* Messages Window */}
       <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-slate-950/20">
-        {messages.map((msg) => (
-          <div
-            key={msg.id}
-            className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-          >
-            <div className={`max-w-[80%] rounded-2xl p-4 text-sm leading-relaxed ${
-              msg.role === 'user'
-                ? 'bg-green-600 text-white rounded-br-none shadow'
-                : 'bg-slate-900 border border-slate-800 text-slate-200 rounded-bl-none shadow'
-            }`}>
-              {/* Formatted Text renderer */}
-              <p className="whitespace-pre-wrap">
-                {msg.content}
-              </p>
+        {messages.map((msg) => {
+          const isThisSpeaking = speechStatus.isSpeaking && speechStatus.activeTextId === msg.id;
+          const isThisPaused = isThisSpeaking && speechStatus.isPaused;
+
+          return (
+            <div
+              key={msg.id}
+              className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}
+            >
+              <div className={`max-w-[85%] sm:max-w-[80%] rounded-2xl p-4 text-sm leading-relaxed ${
+                msg.role === 'user'
+                  ? 'bg-green-600 text-white rounded-br-none shadow'
+                  : 'bg-slate-900 border border-slate-800 text-slate-200 rounded-bl-none shadow'
+              }`}>
+                {/* Formatted Text renderer */}
+                <p className="whitespace-pre-wrap">
+                  {msg.content}
+                </p>
+
+                {/* Model Audio Player Action Bar */}
+                {msg.role === 'model' && (
+                  <div className="mt-3 pt-2.5 border-t border-slate-800 flex items-center justify-between gap-2 text-xs">
+                    <button
+                      onClick={() => handleSpeakMessage(msg.id, msg.content)}
+                      className={`inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                        isThisSpeaking && !isThisPaused
+                          ? 'bg-green-500 text-white shadow'
+                          : isThisPaused
+                          ? 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/30'
+                          : 'bg-slate-800 hover:bg-slate-750 text-slate-300 hover:text-white border border-slate-700'
+                      }`}
+                      title={
+                        isThisSpeaking && !isThisPaused
+                          ? translate('Pause Speech', 'Kusilika')
+                          : isThisPaused
+                          ? translate('Resume Speech', 'Konkanyapo')
+                          : translate('Listen to advice', 'Kutika ku mashiwi')
+                      }
+                    >
+                      {isThisSpeaking && !isThisPaused ? (
+                        <>
+                          <Pause className="h-3 w-3 fill-current" />
+                          <span>{translate('Pause', 'Kusilika')}</span>
+                        </>
+                      ) : isThisPaused ? (
+                        <>
+                          <Play className="h-3 w-3 fill-current" />
+                          <span>{translate('Resume', 'Konkanyapo')}</span>
+                        </>
+                      ) : (
+                        <>
+                          <Volume2 className="h-3 w-3 text-green-400" />
+                          <span>{translate('Listen Aloud', 'Kutikeni')}</span>
+                        </>
+                      )}
+                    </button>
+
+                    {/* Active Voice Wave Animation */}
+                    {isThisSpeaking && !isThisPaused && (
+                      <div className="flex items-center space-x-1 text-green-400 font-mono text-[10px]">
+                        <span className="h-2.5 w-0.5 bg-green-400 rounded-full animate-bounce [animation-delay:-0.2s]"></span>
+                        <span className="h-3.5 w-0.5 bg-green-300 rounded-full animate-bounce [animation-delay:-0.1s]"></span>
+                        <span className="h-2 w-0.5 bg-green-400 rounded-full animate-bounce"></span>
+                        <span className="text-[10px] ml-1">{translate('Speaking...', 'Ulelanda...')}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
         {loading && (
           <div className="flex justify-start">
             <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 rounded-bl-none max-w-sm flex items-center space-x-2 text-slate-400 text-xs">
@@ -229,3 +373,4 @@ export const ChatbotSection: React.FC = () => {
     </div>
   );
 };
+
