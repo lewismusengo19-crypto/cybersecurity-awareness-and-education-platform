@@ -81,25 +81,6 @@ export const HomeSection: React.FC = () => {
     fetchDailyTip();
   }, [language]);
 
-  const isTipSpeaking = speechStatus.isSpeaking && speechStatus.activeTextId === 'daily-tip';
-  const isTipPaused = isTipSpeaking && speechStatus.isPaused;
-
-  const handleSpeakTip = () => {
-    if (!dailyTip) return;
-    if (isTipSpeaking) {
-      if (isTipPaused) {
-        speechService.resume();
-      } else {
-        speechService.pause();
-      }
-    } else {
-      speechService.speak(dailyTip, 'daily-tip', language, {
-        rate: 0.95,
-        pitch: language === 'bm' ? 1.05 : 1.0
-      });
-    }
-  };
-
   // Metrics
   const totalQuizzesCompleted = attempts.length + 42; // Fallback + local attempts for realism
   const activeLearners = 1205;
@@ -255,63 +236,15 @@ export const HomeSection: React.FC = () => {
                 </h3>
               </div>
               <div className="flex space-x-1.5 items-center">
-                {/* Dedicated Speak / Pause Button */}
-                <button
-                  id="speak-tip-btn"
-                  onClick={handleSpeakTip}
-                  disabled={loadingTip || !dailyTip}
-                  className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center space-x-1.5 ${
-                    isTipSpeaking && !isTipPaused
-                      ? 'bg-green-600 text-white animate-pulse shadow-md shadow-green-600/20'
-                      : isTipPaused
-                      ? 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/30'
-                      : 'bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700'
-                  }`}
-                  title={
-                    isTipSpeaking && !isTipPaused
-                      ? translate('Pause Speech', 'Kusilika')
-                      : isTipPaused
-                      ? translate('Resume Speech', 'Konkanyapo')
-                      : translate('Listen to Tip', 'Kutika ku Cifundo')
-                  }
-                >
-                  {isTipSpeaking && !isTipPaused ? (
-                    <>
-                      <Pause className="h-3.5 w-3.5 fill-current" />
-                      <span>{translate('Pause', 'Kusilika')}</span>
-                    </>
-                  ) : isTipPaused ? (
-                    <>
-                      <Play className="h-3.5 w-3.5 fill-current" />
-                      <span>{translate('Resume', 'Konkanyapo')}</span>
-                    </>
-                  ) : (
-                    <>
-                      <Volume2 className="h-3.5 w-3.5 text-green-400" />
-                      <span>{translate('Listen Aloud', 'Kutikeni')}</span>
-                    </>
-                  )}
-                </button>
-
-                {/* Stop button when active */}
-                {isTipSpeaking && (
-                  <button
-                    onClick={() => speechService.stop()}
-                    className="p-1.5 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 hover:bg-red-500/20 transition-all cursor-pointer"
-                    title={translate('Stop Voice', 'Lekeni')}
-                  >
-                    <VolumeX className="h-4 w-4" />
-                  </button>
-                )}
-
                 <button
                   id="refresh-tip-btn"
                   onClick={fetchDailyTip}
                   disabled={loadingTip}
-                  className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition-all cursor-pointer"
+                  className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition-all cursor-pointer flex items-center space-x-1.5 text-xs"
                   title={translate('Get New Tip', 'Icipote cimbi')}
                 >
                   <RefreshCw className={`h-4 w-4 ${loadingTip ? 'animate-spin' : ''}`} />
+                  <span className="hidden sm:inline font-medium">{translate('New Tip', 'Cimbi')}</span>
                 </button>
               </div>
             </div>
