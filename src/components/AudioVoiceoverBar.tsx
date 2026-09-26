@@ -6,32 +6,24 @@ import { Volume2, VolumeX, Play, Pause, RotateCcw, Sparkles, Gauge, ChevronDown,
 interface AudioVoiceoverBarProps {
   id: string;
   titleEn: string;
-  titleBm: string;
+  titleBm?: string;
   narrativeEn: string;
-  narrativeBm: string;
+  narrativeBm?: string;
   compact?: boolean;
 }
 
 export const AudioVoiceoverBar: React.FC<AudioVoiceoverBarProps> = ({
   id,
   titleEn,
-  titleBm,
+  titleBm: _titleBm,
   narrativeEn,
-  narrativeBm,
+  narrativeBm: _narrativeBm,
   compact = false
 }) => {
-  const { language, translate } = useApp();
+  const { translate } = useApp();
   const [speechStatus, setSpeechStatus] = useState(speechService.getStatus());
-  const [selectedVoiceLang, setSelectedVoiceLang] = useState<'en' | 'bm'>(language);
   const [playbackSpeed, setPlaybackSpeed] = useState<number>(1.0);
   const [showScript, setShowScript] = useState<boolean>(false);
-
-  // Sync selected voice language with global app language changes when idle
-  useEffect(() => {
-    if (!speechStatus.isSpeaking) {
-      setSelectedVoiceLang(language);
-    }
-  }, [language, speechStatus.isSpeaking]);
 
   useEffect(() => {
     const unsubscribe = speechService.subscribe(() => {
@@ -45,9 +37,7 @@ export const AudioVoiceoverBar: React.FC<AudioVoiceoverBarProps> = ({
   const isCurrentItemPlaying = speechStatus.isSpeaking && speechStatus.activeTextId === id;
   const isCurrentItemPaused = isCurrentItemPlaying && speechStatus.isPaused;
 
-  const currentTitle = selectedVoiceLang === 'bm' ? titleBm : titleEn;
-  const currentNarrative = selectedVoiceLang === 'bm' ? narrativeBm : narrativeEn;
-  const fullNarrationScript = `${currentTitle}. ${currentNarrative}`;
+  const fullNarrationScript = `${titleEn}. ${narrativeEn}`;
 
   const handlePlayToggle = () => {
     if (isCurrentItemPlaying && !isCurrentItemPaused) {
@@ -55,9 +45,9 @@ export const AudioVoiceoverBar: React.FC<AudioVoiceoverBarProps> = ({
     } else if (isCurrentItemPaused) {
       speechService.resume();
     } else {
-      speechService.speak(fullNarrationScript, id, selectedVoiceLang, {
+      speechService.speak(fullNarrationScript, id, 'en', {
         rate: playbackSpeed,
-        pitch: selectedVoiceLang === 'bm' ? 1.05 : 1.0
+        pitch: 1.0
       });
     }
   };
@@ -69,9 +59,9 @@ export const AudioVoiceoverBar: React.FC<AudioVoiceoverBarProps> = ({
   const handleReplay = () => {
     speechService.stop();
     setTimeout(() => {
-      speechService.speak(fullNarrationScript, id, selectedVoiceLang, {
+      speechService.speak(fullNarrationScript, id, 'en', {
         rate: playbackSpeed,
-        pitch: selectedVoiceLang === 'bm' ? 1.05 : 1.0
+        pitch: 1.0
       });
     }, 100);
   };
@@ -86,23 +76,9 @@ export const AudioVoiceoverBar: React.FC<AudioVoiceoverBarProps> = ({
     if (isCurrentItemPlaying) {
       speechService.stop();
       setTimeout(() => {
-        speechService.speak(fullNarrationScript, id, selectedVoiceLang, {
+        speechService.speak(fullNarrationScript, id, 'en', {
           rate: newSpeed,
-          pitch: selectedVoiceLang === 'bm' ? 1.05 : 1.0
-        });
-      }, 50);
-    }
-  };
-
-  const switchLanguage = (lang: 'en' | 'bm') => {
-    setSelectedVoiceLang(lang);
-    if (isCurrentItemPlaying) {
-      speechService.stop();
-      const script = lang === 'bm' ? `${titleBm}. ${narrativeBm}` : `${titleEn}. ${narrativeEn}`;
-      setTimeout(() => {
-        speechService.speak(script, id, lang, {
-          rate: playbackSpeed,
-          pitch: lang === 'bm' ? 1.05 : 1.0
+          pitch: 1.0
         });
       }, 50);
     }
@@ -122,7 +98,7 @@ export const AudioVoiceoverBar: React.FC<AudioVoiceoverBarProps> = ({
               ? 'bg-green-600 text-white animate-pulse'
               : 'bg-slate-800 text-slate-200 hover:bg-slate-700'
           }`}
-          title={isCurrentItemPlaying && !isCurrentItemPaused ? 'Pause Voiceover' : 'Play Voiceover'}
+          title={isCurrentItemPlaying && !isCurrentItemPaused ? 'Pause Voiceover' : 'Play Audio Voiceover (English)'}
         >
           {isCurrentItemPlaying && !isCurrentItemPaused ? (
             <Pause className="h-3.5 w-3.5" />
@@ -132,7 +108,7 @@ export const AudioVoiceoverBar: React.FC<AudioVoiceoverBarProps> = ({
           <span>
             {isCurrentItemPlaying && !isCurrentItemPaused
               ? translate('Speaking...', 'Ulelanda...')
-              : translate('Listen (Audio)', 'Kutika (Audio)')}
+              : translate('Listen (English)', 'Kutika (English)')}
           </span>
         </button>
 
@@ -170,16 +146,16 @@ export const AudioVoiceoverBar: React.FC<AudioVoiceoverBarProps> = ({
             <div className="flex items-center space-x-2">
               <span className="text-xs font-bold text-white uppercase tracking-wider flex items-center space-x-1">
                 <Sparkles className="h-3 w-3 text-green-400" />
-                <span>{translate('AI Audio Voiceover', 'Voiceover ya Sambililo')}</span>
+                <span>{translate('Audio Voiceover', 'Voiceover ya Sambililo')}</span>
               </span>
               <span className="text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded-full font-mono">
-                {selectedVoiceLang === 'bm' ? 'ICHIBEMBA' : 'ENGLISH'}
+                ENGLISH AUDIO
               </span>
             </div>
             <p className="text-[11px] text-slate-400 truncate max-w-xs sm:max-w-md mt-0.5">
               {translate(
-                'Listen to professional spoken instruction with synchronized audio narration.',
-                'Kutikeni ku masambililo aya landwa mu Cibemba nangu mu Cingeleshi.'
+                'Listen to spoken instruction with clear audio narration.',
+                'Kutikeni ku masambililo aya landwa mu Cingeleshi.'
               )}
             </p>
           </div>
@@ -187,30 +163,6 @@ export const AudioVoiceoverBar: React.FC<AudioVoiceoverBarProps> = ({
 
         {/* Right: Controls & Speed */}
         <div className="flex items-center space-x-2">
-          {/* Language Selector */}
-          <div className="flex bg-slate-950 p-1 rounded-xl border border-slate-800">
-            <button
-              onClick={() => switchLanguage('en')}
-              className={`px-2.5 py-1 rounded-lg text-[10px] font-bold font-mono transition-all cursor-pointer ${
-                selectedVoiceLang === 'en'
-                  ? 'bg-green-600 text-white shadow'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              EN
-            </button>
-            <button
-              onClick={() => switchLanguage('bm')}
-              className={`px-2.5 py-1 rounded-lg text-[10px] font-bold font-mono transition-all cursor-pointer ${
-                selectedVoiceLang === 'bm'
-                  ? 'bg-green-600 text-white shadow'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              BM
-            </button>
-          </div>
-
           {/* Speed Selector */}
           <button
             onClick={cycleSpeed}
@@ -274,8 +226,7 @@ export const AudioVoiceoverBar: React.FC<AudioVoiceoverBarProps> = ({
           </div>
 
           <span className="text-[11px] text-green-400 font-mono">
-            {translate('Playing audio voiceover in', 'Amasambililo yaleandwa mu')}{' '}
-            {selectedVoiceLang === 'bm' ? 'Ichibemba' : 'English'} ({playbackSpeed}x)
+            {translate('Playing audio voiceover in English', 'Amasambililo yaleandwa mu Cingeleshi')} ({playbackSpeed}x)
           </span>
 
           <button
@@ -305,8 +256,8 @@ export const AudioVoiceoverBar: React.FC<AudioVoiceoverBarProps> = ({
 
       {showScript && (
         <div className="p-3 bg-slate-950/80 border border-slate-800 rounded-xl text-xs text-slate-300 leading-relaxed max-h-36 overflow-y-auto">
-          <p className="font-semibold text-white mb-1">{currentTitle}</p>
-          <p>{currentNarrative}</p>
+          <p className="font-semibold text-white mb-1">{titleEn}</p>
+          <p>{narrativeEn}</p>
         </div>
       )}
     </div>

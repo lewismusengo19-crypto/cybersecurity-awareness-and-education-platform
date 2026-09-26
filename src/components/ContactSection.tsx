@@ -128,7 +128,7 @@ export const ContactSection: React.FC = () => {
 
                 <div>
                   <label className="block text-xs font-medium uppercase tracking-wider text-slate-400 mb-1">
-                    {translate('Your Question / Message', 'Ipusho Lyenu nangu Message')}
+                    {translate('Your Question / Message', 'Ilipusho Lyenu nangu Message')}
                   </label>
                   <textarea
                     id="contact-message"

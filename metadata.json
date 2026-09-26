@@ -1,6 +1,6 @@
 {
   "name": "Cybersecurity Awareness and Education Platform",
   "description": "A cybersecurity awareness and education platform for Zambians in English and Bemba, featuring interactive lessons, videos, images, quizzes, and an AI cybersecurity assistant.",
-  "requestFramePermissions": [],
+  "requestFramePermissions": ["microphone"],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

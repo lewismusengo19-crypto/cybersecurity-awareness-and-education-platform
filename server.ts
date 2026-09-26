@@ -32,6 +32,9 @@ uploadDirs.forEach(dir => {
 // Serve uploaded files statically
 app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
+// Serve public static assets (PWA manifest, service worker, icons)
+app.use(express.static(path.join(process.cwd(), 'public')));
+
 // Helper for lazy Gemini initialization
 let aiClient: GoogleGenAI | null = null;
 function getGemini() {
@@ -206,7 +209,7 @@ app.get('/api/tips', async (req, res) => {
     const fallbackBm = [
       "Isungileni MoMo PIN yenu mwe bene. Kampani iya MTN neya Airtel teti imitumine foni ukwipusha pali PIN yenu, iyo ninkama yenu  .",
       "Bomfyeni Two-Factor Authentication (2FA) pali WhatsApp yenu.",
-      "Ilukani kuma links aya pa WhatsApp neyapa Facebook aya mibepa ati ubuteko bulepela indalama nangu ama bundles aya fye. Ubu bufi ubwapangwa ukumibila."
+      "Ilukeni kuma links aya pa WhatsApp neyapa Facebook aya mibepa ati ubuteko bulepela indalama nangu ama bundles aya fye. Ubu bufi ubwapangwa ukumibila."
     ];
 
     const fallbackList = language === 'bm' ? fallbackBm : fallbackEn;

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { Shield, Upload, FilePlus, AlertOctagon, Users, BarChart2, CheckCircle, Trash2, Heart, Plus, BookOpen, AlertCircle, RefreshCw } from 'lucide-react';
+import { Shield, Upload, FilePlus, AlertOctagon, Users, BarChart2, CheckCircle, Trash2, Heart, Plus, BookOpen, AlertCircle, RefreshCw, LogOut, Lock, Key, Check, Eye, EyeOff, ShieldCheck, CheckCircle2 } from 'lucide-react';
 import { QuizQuestion } from '../types';
 
 export const AdminSection: React.FC = () => {
@@ -13,15 +13,58 @@ export const AdminSection: React.FC = () => {
     attempts,
     auditLogs,
     addVideo,
+    deleteVideo,
     addImage,
     addPdf,
+    deletePdf,
     addQuiz,
     deleteQuiz,
     addNotification,
-    translate
+    translate,
+    logout,
+    getAdminPin,
+    updateAdminPin
   } = useApp();
 
-  const [activeTab, setActiveTab] = useState<'stats' | 'upload' | 'quizzes' | 'alerts' | 'audit'>('stats');
+  const [activeTab, setActiveTab] = useState<'stats' | 'upload' | 'quizzes' | 'alerts' | 'audit' | 'security'>('stats');
+
+  // Admin PIN management state
+  const [currentAdminPin, setCurrentAdminPin] = useState(() => getAdminPin());
+  const [showCurrentPin, setShowCurrentPin] = useState(false);
+  const [newAdminPinInput, setNewAdminPinInput] = useState('');
+  const [confirmAdminPinInput, setConfirmAdminPinInput] = useState('');
+  const [pinChangeSuccess, setPinChangeSuccess] = useState<string | null>(null);
+  const [pinChangeError, setPinChangeError] = useState<string | null>(null);
+
+  const handleUpdatePin = (e: React.FormEvent) => {
+    e.preventDefault();
+    setPinChangeError(null);
+    setPinChangeSuccess(null);
+
+    const trimmedNew = newAdminPinInput.trim();
+    const trimmedConfirm = confirmAdminPinInput.trim();
+
+    if (trimmedNew.length < 4) {
+      setPinChangeError(translate('PIN must be at least 4 digits.', 'PIN ifwile ukukwata ifipendo ukucila pali 4.'));
+      return;
+    }
+
+    if (trimmedNew !== trimmedConfirm) {
+      setPinChangeError(translate('PINs do not match. Please re-enter.', 'Ama PIN tayalingene. Esheni nakabili.'));
+      return;
+    }
+
+    try {
+      updateAdminPin(trimmedNew);
+      setCurrentAdminPin(trimmedNew);
+      setNewAdminPinInput('');
+      setConfirmAdminPinInput('');
+      setPinChangeSuccess(translate('Admin Master Security PIN successfully updated!', 'Admin Security PIN naicinjwa bwino!'));
+      setTimeout(() => setPinChangeSuccess(null), 4000);
+    } catch (err: any) {
+      setPinChangeError(err.message || 'Failed to update PIN.');
+    }
+  };
 
   // Upload state
   const [uploadType, setUploadType] = useState<'video' | 'image' | 'pdf'>('video');
@@ -231,28 +274,44 @@ export const AdminSection: React.FC = () => {
           </p>
         </div>
 
-        {/* Tab Switcher */}
-        <div className="flex bg-slate-900 border border-slate-800 rounded-xl p-1 overflow-x-auto">
-          {[
-            { id: 'stats', label: translate('Overview', 'Mone Yonse') },
-            { id: 'upload', label: translate('Media Upload', 'Fyatani Media') },
-            { id: 'quizzes', label: translate('Quiz Maker', 'Pangani Quiz') },
-            { id: 'alerts', label: translate('Broadcasts', 'Amachenjelelo') },
-            { id: 'audit', label: translate('Security Logs', 'System Logs') }
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              id={`admin-tab-${tab.id}`}
-              onClick={() => setActiveTab(tab.id as any)}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
-                activeTab === tab.id
-                  ? 'bg-orange-500 text-white shadow'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
+        {/* Tab Switcher & Logout */}
+        <div className="flex items-center space-x-2">
+          <div className="flex bg-slate-900 border border-slate-800 rounded-xl p-1 overflow-x-auto">
+            {[
+              { id: 'stats', label: translate('Overview', 'Mone Yonse') },
+              { id: 'upload', label: translate('Media Upload', 'Fyatani Media') },
+              { id: 'quizzes', label: translate('Quiz Maker', 'Pangani Quiz') },
+              { id: 'alerts', label: translate('Broadcasts', 'Amachenjelelo') },
+              { id: 'audit', label: translate('Security Logs', 'System Logs') },
+              { id: 'security', label: translate('Security & PIN', 'Security ya Admin') }
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                id={`admin-tab-${tab.id}`}
+                onClick={() => setActiveTab(tab.id as any)}
+                className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+                  activeTab === tab.id
+                    ? 'bg-orange-500 text-white shadow'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          <button
+            id="admin-portal-logout-btn"
+            onClick={async (e) => {
+              e.preventDefault();
+              await logout();
+            }}
+            className="flex items-center space-x-1.5 px-3 py-2 rounded-xl border border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 text-xs font-bold cursor-pointer transition-all shrink-0"
+            title={translate('Sign Out', 'Ukufumamo')}
+          >
+            <LogOut className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">{translate('Sign Out', 'Fumamo')}</span>
+          </button>
         </div>
       </div>
 
@@ -807,6 +866,153 @@ export const AdminSection: React.FC = () => {
             {auditLogs.length === 0 && (
               <p className="text-center text-slate-500 py-4">No audit actions recorded in session yet.</p>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* TAB 6: ADMIN SECURITY, 2FA & PIN CONFIGURATION */}
+      {activeTab === 'security' && (
+        <div className="space-y-6">
+          {/* Security Status Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-2">
+              <div className="flex items-center space-x-2 text-green-400">
+                <ShieldCheck className="h-5 w-5" />
+                <span className="text-xs font-bold uppercase tracking-wider">{translate('Dual-Factor Auth (2FA)', 'Security ya 2FA')}</span>
+              </div>
+              <p className="text-xl font-extrabold text-white">{translate('Active & Enforced', 'Ili pa Nshita')}</p>
+              <p className="text-xs text-slate-400">
+                {translate(
+                  'Password alone cannot unlock administrative privileges. 6-digit Master PIN is strictly verified on every login.',
+                  'Password yeka te kuti yingile. PIN iya 6-digit ilafwaikwa lyonse.'
+                )}
+              </p>
+            </div>
+
+            <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-2">
+              <div className="flex items-center space-x-2 text-orange-400">
+                <Lock className="h-5 w-5" />
+                <span className="text-xs font-bold uppercase tracking-wider">{translate('1-Click Bypass', '1-Click Bypass')}</span>
+              </div>
+              <p className="text-xl font-extrabold text-white">{translate('Permanently Disabled', 'Yalisalwa')}</p>
+              <p className="text-xs text-slate-400">
+                {translate(
+                  'Public 1-click admin demo buttons and autofill bypasses have been eradicated. Only registered authorized coordinators can access.',
+                  'Amabatani ya 1-click demo aya Admin yafumishiwapo.'
+                )}
+              </p>
+            </div>
+
+            <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-2">
+              <div className="flex items-center space-x-2 text-blue-400">
+                <Key className="h-5 w-5" />
+                <span className="text-xs font-bold uppercase tracking-wider">{translate('Self-Registration', 'Kulembesha')}</span>
+              </div>
+              <p className="text-xl font-extrabold text-white">{translate('Restricted with Key', 'Yacingililwa')} </p>
+              <p className="text-xs text-slate-400">
+                {translate(
+                  'New users cannot select the Administrator role unless they provide the secret Academy Authorization Key.',
+                  'Abantu abapya te kuti bapange account ya admin ukwabula Secret Key.'
+                )}
+              </p>
+            </div>
+          </div>
+
+          {/* Master PIN Configuration Panel */}
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-6">
+            <div className="border-b border-slate-800 pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <h3 className="font-bold text-lg text-white flex items-center space-x-2">
+                  <Key className="h-5 w-5 text-orange-500" />
+                  <span>{translate('Admin Master Security PIN Management', 'Ukusunga Admin Master Security PIN')}</span>
+                </h3>
+                <p className="text-xs text-slate-400 mt-1">
+                  {translate(
+                    'Configure or update the secondary security PIN required to log into Lewis Musengo\'s administrator account.',
+                    'Cinjeni PIN iya 2FA iyakwingilila mu account ya Admin Lewis Musengo.'
+                  )}
+                </p>
+              </div>
+
+              {/* Current PIN Display */}
+              <div className="flex items-center space-x-2 bg-slate-950 px-3.5 py-2 rounded-xl border border-slate-800 self-start">
+                <span className="text-xs text-slate-400">{translate('Current Master PIN:', 'PIN ya nomba:')}</span>
+                <span className="font-mono font-bold text-orange-400 tracking-wider">
+                  {showCurrentPin ? currentAdminPin : '••••••'}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setShowCurrentPin(!showCurrentPin)}
+                  className="text-slate-400 hover:text-slate-200 p-1 cursor-pointer"
+                  title={showCurrentPin ? translate('Hide PIN', 'Fiseni') : translate('Show PIN', 'Lolesheni')}
+                >
+                  {showCurrentPin ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+            </div>
+
+            {/* Notification messages */}
+            {pinChangeSuccess && (
+              <div className="p-3 bg-green-950/80 border border-green-500 text-green-200 rounded-xl text-xs flex items-center space-x-2">
+                <CheckCircle2 className="h-4 w-4 text-green-400 shrink-0" />
+                <span>{pinChangeSuccess}</span>
+              </div>
+            )}
+
+            {pinChangeError && (
+              <div className="p-3 bg-red-950/80 border border-red-500 text-red-200 rounded-xl text-xs flex items-center space-x-2">
+                <AlertOctagon className="h-4 w-4 text-red-400 shrink-0" />
+                <span>{pinChangeError}</span>
+              </div>
+            )}
+
+            {/* PIN Update Form */}
+            <form onSubmit={handleUpdatePin} className="max-w-xl space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">
+                    {translate('New 6-Digit PIN', 'PIN Iyipya (6-digits)')}
+                  </label>
+                  <input
+                    type="password"
+                    maxLength={8}
+                    required
+                    value={newAdminPinInput}
+                    onChange={(e) => setNewAdminPinInput(e.target.value)}
+                    placeholder="e.g. 260966"
+                    className="w-full px-3 py-2 bg-slate-950 border border-slate-700 text-white rounded-xl font-mono text-sm tracking-widest focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">
+                    {translate('Confirm New PIN', 'Kushikimika PIN Iyipya')}
+                  </label>
+                  <input
+                    type="password"
+                    maxLength={8}
+                    required
+                    value={confirmAdminPinInput}
+                    onChange={(e) => setConfirmAdminPinInput(e.target.value)}
+                    placeholder="e.g. 260966"
+                    className="w-full px-3 py-2 bg-slate-950 border border-slate-700 text-white rounded-xl font-mono text-sm tracking-widest focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-2 flex items-center space-x-3">
+                <button
+                  type="submit"
+                  className="px-4 py-2.5 bg-orange-600 hover:bg-orange-500 text-white font-bold rounded-xl text-xs cursor-pointer transition-colors shadow-lg flex items-center space-x-2"
+                >
+                  <Check className="h-4 w-4" />
+                  <span>{translate('Save New Admin PIN', 'Sungani PIN Iyipya')}</span>
+                </button>
+                <span className="text-[11px] text-slate-400">
+                  {translate('Takes effect immediately on all future logins.', 'Ilatendeka ukubomba lilyaline.')}
+                </span>
+              </div>
+            </form>
           </div>
         </div>
       )}

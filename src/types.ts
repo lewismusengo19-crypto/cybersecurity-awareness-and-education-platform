@@ -24,6 +24,28 @@ export interface VideoContent {
   createdAt: string;
 }
 
+export interface ScamAnalysis {
+  scamType_en: string;
+  scamType_bm: string;
+  originalText: string;
+  senderInfo: string;
+  breakdown: Array<{
+    term: string;
+    meaning_en: string;
+    meaning_bm: string;
+    psychologicalTactic_en: string;
+    psychologicalTactic_bm: string;
+  }>;
+  howItWorks_en: string[];
+  howItWorks_bm: string[];
+  redFlags_en: string[];
+  redFlags_bm: string[];
+  recommendations_en: string[];
+  recommendations_bm: string[];
+  reportingChannels_en: string[];
+  reportingChannels_bm: string[];
+}
+
 export interface ImageContent {
   id: string;
   title_en: string;
@@ -31,9 +53,11 @@ export interface ImageContent {
   description_en: string;
   description_bm: string;
   url: string; // URL to image file
+  category?: string;
   views: number;
   downloads: number;
   createdAt: string;
+  scamAnalysis?: ScamAnalysis;
 }
 
 export interface PDFMaterial {
@@ -54,6 +78,8 @@ export interface QuizQuestion {
   options_en: string[];
   options_bm: string[];
   correctAnswerIndex: number;
+  explanation_en?: string;
+  explanation_bm?: string;
 }
 
 export interface Quiz {
@@ -78,6 +104,7 @@ export interface QuizAttempt {
   score: number;
   totalQuestions: number;
   completedAt: string;
+  isOfflineAttempt?: boolean;
 }
 
 export interface Bookmark {

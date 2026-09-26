@@ -70,7 +70,7 @@ class SpeechService {
   public speak(
     text: string,
     id: string = 'generic',
-    language: 'en' | 'bm' = 'en',
+    _language: 'en' | 'bm' = 'en',
     options?: SpeechOptions
   ): void {
     if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
@@ -104,26 +104,17 @@ class SpeechService {
       utterance.pitch = options?.pitch || 1.0;
       utterance.volume = options?.volume || 1.0;
 
-      // Voice selection
+      // Voice selection (High-quality natural English)
       const voices = window.speechSynthesis.getVoices();
       if (voices && voices.length > 0) {
-        if (language === 'bm') {
-          const zaVoice = voices.find(v => v.lang.includes('en-ZA') || v.lang.includes('en_ZA'));
-          const gbVoice = voices.find(v => v.lang.includes('en-GB') || v.lang.includes('en_GB'));
-          if (zaVoice || gbVoice) {
-            utterance.voice = zaVoice || gbVoice;
-          }
-          utterance.lang = 'en-ZA';
+        const enVoice = voices.find(v => v.lang.startsWith('en') && (v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Neural') || v.name.includes('Premium')));
+        if (enVoice) {
+          utterance.voice = enVoice;
         } else {
-          const enVoice = voices.find(v => v.lang.startsWith('en') && (v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Neural') || v.name.includes('Premium')));
-          if (enVoice) {
-            utterance.voice = enVoice;
-          } else {
-            const genericEn = voices.find(v => v.lang.startsWith('en'));
-            if (genericEn) utterance.voice = genericEn;
-          }
-          utterance.lang = utterance.voice?.lang || 'en-US';
+          const genericEn = voices.find(v => v.lang.startsWith('en'));
+          if (genericEn) utterance.voice = genericEn;
         }
+        utterance.lang = utterance.voice?.lang || 'en-US';
       }
 
       utterance.onstart = () => {

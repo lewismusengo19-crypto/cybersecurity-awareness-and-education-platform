@@ -9,6 +9,7 @@ import { ChatbotSection } from './components/ChatbotSection';
 import { AboutSection } from './components/AboutSection';
 import { ContactSection } from './components/ContactSection';
 import { AdminSection } from './components/AdminSection';
+import { OfflineBanner } from './components/OfflineBanner';
 import { Shield, Eye, Smartphone, Mail, Phone, ExternalLink } from 'lucide-react';
 
 const MainAppContent: React.FC = () => {
@@ -54,6 +55,9 @@ const MainAppContent: React.FC = () => {
     }`} id="app-container">
       {/* Navbar */}
       <Navbar />
+
+      {/* Offline Connectivity & Storage Banner */}
+      <OfflineBanner />
 
       {/* Main Container */}
       <main className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">

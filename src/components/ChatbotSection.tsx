@@ -1,7 +1,19 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { speechService } from '../utils/speechService';
-import { Shield, Send, Sparkles, Trash2, Smartphone, Key, HelpCircle, Volume2, VolumeX, Pause, Play, Gauge, Radio } from 'lucide-react';
+import {
+  Shield,
+  Send,
+  Trash2,
+  Smartphone,
+  Key,
+  HelpCircle,
+  Volume2,
+  VolumeX,
+  Pause,
+  Play,
+  Gauge
+} from 'lucide-react';
 
 interface ChatMessage {
   id: string;
@@ -30,8 +42,9 @@ export const ChatbotSection: React.FC = () => {
     };
   }, []);
 
-  // Set up welcome message on load
+  // Set up welcome message on load & stop speech on Bemba
   useEffect(() => {
+    speechService.stop();
     setMessages([
       {
         id: 'welcome',
@@ -50,6 +63,7 @@ export const ChatbotSection: React.FC = () => {
   }, [messages]);
 
   const handleSpeakMessage = (msgId: string, text: string) => {
+    if (language !== 'en') return;
     if (speechStatus.isSpeaking && speechStatus.activeTextId === msgId) {
       if (speechStatus.isPaused) {
         speechService.resume();
@@ -57,9 +71,9 @@ export const ChatbotSection: React.FC = () => {
         speechService.pause();
       }
     } else {
-      speechService.speak(text, msgId, language, {
+      speechService.speak(text, msgId, 'en', {
         rate: speechRate,
-        pitch: language === 'bm' ? 1.05 : 1.0
+        pitch: 1.0
       });
     }
   };
@@ -67,7 +81,12 @@ export const ChatbotSection: React.FC = () => {
   const cycleSpeechRate = () => {
     const rates = [0.8, 1.0, 1.25];
     const nextIndex = (rates.indexOf(speechRate) + 1) % rates.length;
-    setSpeechRate(rates[nextIndex]);
+    const newSpeed = rates[nextIndex];
+    setSpeechRate(newSpeed);
+
+    if (speechStatus.isSpeaking && language === 'en') {
+      speechService.stop();
+    }
   };
 
   const sendMessage = async (text: string) => {
@@ -107,12 +126,12 @@ export const ChatbotSection: React.FC = () => {
           content: data.reply
         }]);
 
-        // Auto read if learner enabled auto-speak
-        if (autoSpeak) {
+        // Auto read if learner enabled auto-speak and in English
+        if (autoSpeak && language === 'en') {
           setTimeout(() => {
-            speechService.speak(data.reply, newMsgId, language, {
+            speechService.speak(data.reply, newMsgId, 'en', {
               rate: speechRate,
-              pitch: language === 'bm' ? 1.05 : 1.0
+              pitch: 1.0
             });
           }, 200);
         }
@@ -186,43 +205,51 @@ export const ChatbotSection: React.FC = () => {
             <h3 className="font-bold text-white text-base leading-tight">Ba Cyber Advisor</h3>
             <span className="text-[10px] text-green-400 font-mono flex items-center space-x-1 mt-0.5">
               <span className="h-1.5 w-1.5 bg-green-500 rounded-full"></span>
-              <span>GEMINI MODEL • TEXT-TO-SPEECH ACTIVE • {language.toUpperCase()}</span>
+              <span>
+                {language === 'en'
+                  ? 'GEMINI AI • INSTANT SUPPORT • TTS'
+                  : 'GEMINI AI • UKWASUKA BWANGU'}
+              </span>
             </span>
           </div>
         </div>
 
         {/* Header Audio & Action Controls */}
         <div className="flex items-center space-x-2">
-          {/* Speed Toggle */}
-          <button
-            onClick={cycleSpeechRate}
-            className="px-2 py-1 bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-300 text-[10px] font-mono font-bold rounded-lg flex items-center space-x-1 cursor-pointer transition-all"
-            title={translate('Voice Speed', 'Ulubilo lwa Ishiwi')}
-          >
-            <Gauge className="h-3 w-3 text-green-400" />
-            <span>{speechRate}x</span>
-          </button>
+          {language === 'en' && (
+            <>
+              {/* Speed Toggle */}
+              <button
+                onClick={cycleSpeechRate}
+                className="px-2 py-1 bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-300 text-[10px] font-mono font-bold rounded-lg flex items-center space-x-1 cursor-pointer transition-all"
+                title="Voice Speed"
+              >
+                <Gauge className="h-3 w-3 text-green-400" />
+                <span>{speechRate}x</span>
+              </button>
 
-          {/* Auto Read Aloud Toggle */}
-          <button
-            onClick={() => setAutoSpeak(!autoSpeak)}
-            className={`px-2.5 py-1 border text-[10px] font-bold rounded-lg flex items-center space-x-1 transition-all cursor-pointer ${
-              autoSpeak
-                ? 'bg-green-600/20 border-green-500/50 text-green-400'
-                : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
-            }`}
-            title={translate('Auto-speak incoming responses', 'Kulanda amashiwi ayapokelelwa')}
-          >
-            <Volume2 className="h-3 w-3" />
-            <span>{autoSpeak ? translate('Voice ON', 'Voice ON') : translate('Voice OFF', 'Voice OFF')}</span>
-          </button>
+              {/* Auto Read Aloud Toggle */}
+              <button
+                onClick={() => setAutoSpeak(!autoSpeak)}
+                className={`px-2.5 py-1 border text-[10px] font-bold rounded-lg flex items-center space-x-1 transition-all cursor-pointer ${
+                  autoSpeak
+                    ? 'bg-green-600/20 border-green-500/50 text-green-400'
+                    : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
+                }`}
+                title="Auto-speak incoming English responses"
+              >
+                <Volume2 className="h-3 w-3" />
+                <span>{autoSpeak ? 'Voice ON' : 'Voice OFF'}</span>
+              </button>
+            </>
+          )}
 
           {/* Stop active speech button if speaking */}
           {speechStatus.isSpeaking && (
             <button
               onClick={() => speechService.stop()}
               className="p-1.5 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 hover:bg-red-500/20 transition-all cursor-pointer"
-              title={translate('Stop Voice', 'Lekeni kulanda')}
+              title={translate('Stop Voice', 'Lekeni')}
             >
               <VolumeX className="h-4 w-4" />
             </button>
@@ -232,7 +259,7 @@ export const ChatbotSection: React.FC = () => {
             id="clear-chat-btn"
             onClick={clearChat}
             className="p-2 rounded-lg bg-slate-900 border border-slate-800 text-slate-400 hover:text-red-400 hover:border-red-500/30 transition-all cursor-pointer"
-            title={translate('Clear Chat', 'Lekeni chat')}
+            title={translate('Clear Chat', 'Lekeni ukulanshanya')}
           >
             <Trash2 className="h-4 w-4" />
           </button>
@@ -260,8 +287,8 @@ export const ChatbotSection: React.FC = () => {
                   {msg.content}
                 </p>
 
-                {/* Model Audio Player Action Bar */}
-                {msg.role === 'model' && (
+                {/* Model Audio Player Action Bar (English only) */}
+                {msg.role === 'model' && language === 'en' && (
                   <div className="mt-3 pt-2.5 border-t border-slate-800 flex items-center justify-between gap-2 text-xs">
                     <button
                       onClick={() => handleSpeakMessage(msg.id, msg.content)}
@@ -274,26 +301,26 @@ export const ChatbotSection: React.FC = () => {
                       }`}
                       title={
                         isThisSpeaking && !isThisPaused
-                          ? translate('Pause Speech', 'Kusilika')
+                          ? 'Pause Speech'
                           : isThisPaused
-                          ? translate('Resume Speech', 'Konkanyapo')
-                          : translate('Listen to advice', 'Kutika ku mashiwi')
+                          ? 'Resume Speech'
+                          : 'Listen to advice (English)'
                       }
                     >
                       {isThisSpeaking && !isThisPaused ? (
                         <>
                           <Pause className="h-3 w-3 fill-current" />
-                          <span>{translate('Pause', 'Kusilika')}</span>
+                          <span>Pause</span>
                         </>
                       ) : isThisPaused ? (
                         <>
                           <Play className="h-3 w-3 fill-current" />
-                          <span>{translate('Resume', 'Konkanyapo')}</span>
+                          <span>Resume</span>
                         </>
                       ) : (
                         <>
                           <Volume2 className="h-3 w-3 text-green-400" />
-                          <span>{translate('Listen Aloud', 'Kutikeni')}</span>
+                          <span>Listen Aloud</span>
                         </>
                       )}
                     </button>
@@ -304,7 +331,7 @@ export const ChatbotSection: React.FC = () => {
                         <span className="h-2.5 w-0.5 bg-green-400 rounded-full animate-bounce [animation-delay:-0.2s]"></span>
                         <span className="h-3.5 w-0.5 bg-green-300 rounded-full animate-bounce [animation-delay:-0.1s]"></span>
                         <span className="h-2 w-0.5 bg-green-400 rounded-full animate-bounce"></span>
-                        <span className="text-[10px] ml-1">{translate('Speaking...', 'Ulelanda...')}</span>
+                        <span className="text-[10px] ml-1">Speaking...</span>
                       </div>
                     )}
                   </div>
@@ -354,9 +381,10 @@ export const ChatbotSection: React.FC = () => {
           type="text"
           value={userInput}
           onChange={(e) => setUserInput(e.target.value)}
-          placeholder={translate('Type your cybersecurity question...', 'Lembani ilipusho lyenu...')}
+          placeholder={translate('Ask a cybersecurity question in English or Bemba...', 'Ipusheni ilipusho mu Cingeleshi nangu mu Cibemba...')}
           className="flex-1 px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-white text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
         />
+
         <button
           id="chat-send-btn"
           type="submit"
@@ -366,6 +394,7 @@ export const ChatbotSection: React.FC = () => {
               ? 'bg-slate-800 text-slate-500 cursor-not-allowed'
               : 'bg-green-600 hover:bg-green-500 text-white shadow'
           }`}
+          title={translate('Send question', 'Tumeni ilipusho')}
         >
           <Send className="h-4 w-4" />
         </button>

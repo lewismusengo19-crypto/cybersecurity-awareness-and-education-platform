@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { speechService } from '../utils/speechService';
-import { Shield, Play, HelpCircle, Award, CheckCircle, Smartphone, AlertTriangle, ArrowRight, Volume2, VolumeX, Pause, Sparkles, RefreshCw } from 'lucide-react';
+import { Shield, Play, HelpCircle, Award, CheckCircle, Smartphone, AlertTriangle, ArrowRight, Volume2, VolumeX, Pause, Sparkles, RefreshCw, Image as ImageIcon } from 'lucide-react';
 
 export const HomeSection: React.FC = () => {
   const {
@@ -9,6 +9,7 @@ export const HomeSection: React.FC = () => {
     activeSection,
     setActiveSection,
     videos,
+    images,
     quizzes,
     attempts,
     notifications,
@@ -111,7 +112,7 @@ export const HomeSection: React.FC = () => {
             <p className="text-slate-300 text-base sm:text-lg max-w-xl leading-relaxed">
               {translate(
                 'Learn how to identify mobile money scams, prevent social media hacks, and safeguard your family. Structured lessons available in both English and Bemba.',
-                'Sambilileni ifyo mwingasanga amalyashi aya bufi, ifyakuicingilila pa WhatsApp napa Facebook, no kuchenjela kuli bamapulamafunde. Ifisambilisho fili mu Cingeleshi na mu Cibemba.'
+                'Sambilileni ifyo mwingeshiba ilyashi ilya bufi, ifyakuicingilila pa WhatsApp napa Facebook, no kuchenjela kuli bamapulamafunde. Ifisambilisho fili mu Cingeleshi na mu Cibemba.'
               )}
             </p>
 
@@ -168,10 +169,10 @@ export const HomeSection: React.FC = () => {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-[10px] font-bold text-slate-200 truncate">
-                    {translate('Suspicious Airtel Caller Detected', 'Foni ya Bufi ya Airtel Yasangwa')}
+                    
                   </p>
                   <p className="text-[9px] text-slate-400 truncate">
-                    {translate('Attempted MoMo PIN request blocked', 'Pali abalefwaya PIN yenu iyaku MTN Mobile Money ebotwakanya')}
+                    
                   </p>
                 </div>
               </div>
@@ -201,7 +202,7 @@ export const HomeSection: React.FC = () => {
           <div>
             <span className="text-3xl font-extrabold text-white block">{videos.length}</span>
             <span className="text-xs text-slate-400 uppercase tracking-wider block font-mono">
-              {translate('Educational Videos', 'Amavidio ya Sambililo')}
+              {translate('Educational Videos', 'Amavidio aya Sambilisha')}
             </span>
           </div>
         </div>
@@ -213,7 +214,7 @@ export const HomeSection: React.FC = () => {
           <div>
             <span className="text-3xl font-extrabold text-white block">{totalQuizzesCompleted}</span>
             <span className="text-xs text-slate-400 uppercase tracking-wider block font-mono">
-              {translate('Quizzes Completed', 'Ama Quizzes Ayapwishiwa')}
+              {translate('Quizzes Completed', 'Ama Quizzes Ayapwishiwe')}
             </span>
           </div>
         </div>
@@ -232,7 +233,7 @@ export const HomeSection: React.FC = () => {
               <div className="flex items-center space-x-2">
                 <Sparkles className="h-5 w-5 text-green-400 animate-spin" />
                 <h3 className="font-bold text-lg text-white">
-                  {translate('Daily Smart Security Tip', 'Icipote ca Kuicingilila Cila Bushiku')}
+                  {translate('Daily Smart Security Tip', 'Icipope ica Kuicingilila Cila Bushiku')}
                 </h3>
               </div>
               <div className="flex space-x-1.5 items-center">
@@ -241,7 +242,7 @@ export const HomeSection: React.FC = () => {
                   onClick={fetchDailyTip}
                   disabled={loadingTip}
                   className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition-all cursor-pointer flex items-center space-x-1.5 text-xs"
-                  title={translate('Get New Tip', 'Icipote cimbi')}
+                  title={translate('Get New Tip', 'Icipope cimbi')}
                 >
                   <RefreshCw className={`h-4 w-4 ${loadingTip ? 'animate-spin' : ''}`} />
                   <span className="hidden sm:inline font-medium">{translate('New Tip', 'Cimbi')}</span>
@@ -252,7 +253,7 @@ export const HomeSection: React.FC = () => {
             {loadingTip ? (
               <div className="py-8 text-center text-slate-400 space-y-2">
                 <div className="h-6 w-6 border-2 border-green-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-                <p className="text-xs font-mono">{translate('Consulting AI security model...', 'Balelanda na AI model...')}</p>
+                <p className="text-xs font-mono">{translate('Consulting AI security model...', 'Baleipusha  AI model...')}</p>
               </div>
             ) : (
               <div className="py-2 space-y-3">
@@ -316,33 +317,35 @@ export const HomeSection: React.FC = () => {
                     <p className="text-[10px] text-slate-500 font-mono">
                       {notif.type === 'announcement' ? translate('URGENT BULLETIN', 'BULLETIN') : translate('LESSON UPDATE', 'UPDATE')}
                     </p>
-                    <button
-                      onClick={() => {
-                        const script = `${translate(notif.title_en, notif.title_bm)}. ${translate(notif.message_en, notif.message_bm)}`;
-                        const notifKey = `notif-${notif.id}`;
-                        if (speechStatus.isSpeaking && speechStatus.activeTextId === notifKey) {
-                          speechService.stop();
-                        } else {
-                          speechService.speak(script, notifKey, language, {
-                            rate: 0.95,
-                            pitch: language === 'bm' ? 1.05 : 1.0
-                          });
-                        }
-                      }}
-                      className={`inline-flex items-center space-x-1 px-2 py-0.5 rounded text-[10px] font-bold transition-all cursor-pointer ${
-                        speechStatus.isSpeaking && speechStatus.activeTextId === `notif-${notif.id}`
-                          ? 'bg-orange-500 text-white animate-pulse'
-                          : 'bg-slate-800 hover:bg-slate-700 text-slate-300'
-                      }`}
-                      title={translate('Listen to alert', 'Kutika ku machenjelo')}
-                    >
-                      <Volume2 className="h-3 w-3" />
-                      <span>
-                        {speechStatus.isSpeaking && speechStatus.activeTextId === `notif-${notif.id}`
-                          ? translate('Playing...', 'Ulelanda...')
-                          : translate('Listen', 'Kutika')}
-                      </span>
-                    </button>
+                    {language === 'en' && (
+                      <button
+                        onClick={() => {
+                          const script = `${notif.title_en}. ${notif.message_en}`;
+                          const notifKey = `notif-${notif.id}`;
+                          if (speechStatus.isSpeaking && speechStatus.activeTextId === notifKey) {
+                            speechService.stop();
+                          } else {
+                            speechService.speak(script, notifKey, 'en', {
+                              rate: 0.95,
+                              pitch: 1.0
+                            });
+                          }
+                        }}
+                        className={`inline-flex items-center space-x-1 px-2 py-0.5 rounded text-[10px] font-bold transition-all cursor-pointer ${
+                          speechStatus.isSpeaking && speechStatus.activeTextId === `notif-${notif.id}`
+                            ? 'bg-orange-500 text-white animate-pulse'
+                            : 'bg-slate-800 hover:bg-slate-750 text-slate-300'
+                        }`}
+                        title="Listen to alert audio (English)"
+                      >
+                        <Volume2 className="h-3 w-3" />
+                        <span>
+                          {speechStatus.isSpeaking && speechStatus.activeTextId === `notif-${notif.id}`
+                            ? 'Playing...'
+                            : 'Listen'}
+                        </span>
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}
@@ -351,66 +354,145 @@ export const HomeSection: React.FC = () => {
 
           <div className="border-t border-slate-800 pt-4 mt-4 text-center">
             <p className="text-[10px] text-slate-500 font-mono">
-              {translate('For urgent cybersecurity assistance, contact ZICTA on short code 709.', ' Tumeni foni kuli ZICTA pali short code 709.')}
+              {translate('For urgent cybersecurity assistance, contact ZICTA on short code 709.', ' Tumeni foni kuli ba ZICTA pali short code 709.')}
             </p>
           </div>
         </div>
       </div>
 
-      {/* QUICK HIGHLIGHTS: LATEST VIDEOS & RECENT QUIZZES */}
-      <div className="space-y-6 text-left">
-        <div className="flex justify-between items-center">
-          <h3 className="text-2xl font-bold text-white flex items-center space-x-2">
-            <Play className="h-5 w-5 text-green-400" />
-            <span>{translate('Featured Educational Videos', 'Amavidio aya Sambilisha')}</span>
-          </h3>
-          <button
-            id="highlight-more-videos-btn"
-            onClick={() => setActiveSection('learn')}
-            className="text-sm font-bold text-green-400 hover:underline flex items-center space-x-1 cursor-pointer"
-          >
-            <span>{translate('View All', 'Mona Fyonse')}</span>
-            <ArrowRight className="h-4 w-4" />
-          </button>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {videos.slice(0, 3).map((video) => (
-            <div
-              key={video.id}
-              className="bg-slate-900 rounded-xl overflow-hidden border border-slate-800 shadow hover:border-slate-700 transition-all flex flex-col justify-between"
+      {/* QUICK HIGHLIGHTS: FEATURED CONTENT */}
+      {videos.length > 0 ? (
+        <div className="space-y-6 text-left">
+          <div className="flex justify-between items-center">
+            <h3 className="text-2xl font-bold text-white flex items-center space-x-2">
+              <Play className="h-5 w-5 text-green-400" />
+              <span>{translate('Featured Educational Videos', 'Amavidio aya Sambilisha')}</span>
+            </h3>
+            <button
+              id="highlight-more-videos-btn"
+              onClick={() => setActiveSection('learn')}
+              className="text-sm font-bold text-green-400 hover:underline flex items-center space-x-1 cursor-pointer"
             >
-              <div className="relative aspect-video bg-slate-950">
-                <img
-                  src={video.thumbnailUrl}
-                  alt={translate(video.title_en, video.title_bm)}
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-80 hover:opacity-100 transition-opacity">
-                  <button
-                    id={`play-home-vid-${video.id}`}
-                    onClick={() => setActiveSection('learn')}
-                    className="p-3 bg-green-600 rounded-full text-white shadow-lg cursor-pointer transform hover:scale-105 transition-transform"
-                  >
-                    <Play className="h-6 w-6 fill-current" />
-                  </button>
+              <span>{translate('View All', 'Mona Fyonse')}</span>
+              <ArrowRight className="h-4 w-4" />
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {videos.slice(0, 3).map((video) => (
+              <div
+                key={video.id}
+                className="bg-slate-900 rounded-xl overflow-hidden border border-slate-800 shadow hover:border-slate-700 transition-all flex flex-col justify-between"
+              >
+                <div className="relative aspect-video bg-slate-950">
+                  <img
+                    src={video.thumbnailUrl}
+                    alt={translate(video.title_en, video.title_bm)}
+                    className="w-full h-full object-cover"
+                  />
+                  {video.url.includes('facebook.com') && (
+                    <div className="absolute top-2 left-2 px-2 py-0.5 bg-[#1877F2] text-white text-[10px] font-bold rounded-md shadow flex items-center space-x-1 z-10">
+                      <span>Facebook Reel</span>
+                    </div>
+                  )}
+                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-80 hover:opacity-100 transition-opacity">
+                    {video.url.includes('facebook.com') ? (
+                      <a
+                        id={`play-home-vid-${video.id}`}
+                        href={video.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-3 bg-[#1877F2] hover:bg-[#166fe5] rounded-full text-white shadow-lg cursor-pointer transform hover:scale-110 transition-transform flex items-center justify-center"
+                        title={translate('Watch on Facebook', 'Mona pali Facebook')}
+                      >
+                        <Play className="h-6 w-6 fill-current ml-0.5" />
+                      </a>
+                    ) : (
+                      <button
+                        id={`play-home-vid-${video.id}`}
+                        onClick={() => setActiveSection('learn')}
+                        className="p-3 bg-green-600 rounded-full text-white shadow-lg cursor-pointer transform hover:scale-105 transition-transform"
+                      >
+                        <Play className="h-6 w-6 fill-current" />
+                      </button>
+                    )}
+                  </div>
+                  <div className="absolute bottom-2 right-2 px-1.5 py-0.5 bg-black/70 text-white text-[10px] rounded font-mono">
+                    {video.duration}
+                  </div>
                 </div>
-                <div className="absolute bottom-2 right-2 px-1.5 py-0.5 bg-black/70 text-white text-[10px] rounded font-mono">
-                  {video.duration}
+                <div className="p-4 space-y-2 text-left">
+                  <h4 className="font-bold text-white text-base line-clamp-1">
+                    {translate(video.title_en, video.title_bm)}
+                  </h4>
+                  <p className="text-xs text-slate-400 line-clamp-2">
+                    {translate(video.description_en, video.description_bm)}
+                  </p>
+                  {video.url.includes('facebook.com') && (
+                    <div className="pt-1">
+                      <a
+                        href={video.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs font-semibold text-blue-400 hover:text-blue-300 flex items-center space-x-1"
+                      >
+                        <span>{translate('Watch Reel on Facebook', 'Mona Reel pali Facebook')}</span>
+                        <ArrowRight className="h-3 w-3" />
+                      </a>
+                    </div>
+                  )}
                 </div>
               </div>
-              <div className="p-4 space-y-2 text-left">
-                <h4 className="font-bold text-white text-base line-clamp-1">
-                  {translate(video.title_en, video.title_bm)}
-                </h4>
-                <p className="text-xs text-slate-400 line-clamp-2">
-                  {translate(video.description_en, video.description_bm)}
-                </p>
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="space-y-6 text-left">
+          <div className="flex justify-between items-center">
+            <h3 className="text-2xl font-bold text-white flex items-center space-x-2">
+              <ImageIcon className="h-5 w-5 text-green-400" />
+              <span>{translate('Featured Visual Infographics', 'Ifipope fya Masambililo')}</span>
+            </h3>
+            <button
+              id="highlight-more-gallery-btn"
+              onClick={() => setActiveSection('gallery')}
+              className="text-sm font-bold text-green-400 hover:underline flex items-center space-x-1 cursor-pointer"
+            >
+              <span>{translate('Explore Gallery', 'Mona Fyonse')}</span>
+              <ArrowRight className="h-4 w-4" />
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {images.slice(0, 3).map((img) => (
+              <div
+                key={img.id}
+                onClick={() => setActiveSection('gallery')}
+                className="bg-slate-900 rounded-xl overflow-hidden border border-slate-800 shadow hover:border-green-500/40 transition-all flex flex-col justify-between cursor-pointer group"
+              >
+                <div className="relative aspect-video bg-slate-950 overflow-hidden">
+                  <img
+                    src={img.url}
+                    alt={translate(img.title_en, img.title_bm)}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                  <div className="absolute top-2 right-2 px-2 py-0.5 bg-black/70 text-green-400 text-[10px] rounded font-mono border border-green-500/30">
+                    {img.category}
+                  </div>
+                </div>
+                <div className="p-4 space-y-2 text-left">
+                  <h4 className="font-bold text-white text-base line-clamp-1 group-hover:text-green-400 transition-colors">
+                    {translate(img.title_en, img.title_bm)}
+                  </h4>
+                  <p className="text-xs text-slate-400 line-clamp-2">
+                    {translate(img.description_en, img.description_bm)}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

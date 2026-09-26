@@ -26,7 +26,7 @@ export const AboutSection: React.FC = () => {
           <p className="text-slate-300 text-base sm:text-lg leading-relaxed">
             {translate(
               'This bilingual platform was founded to address the high rate of social engineering and Mobile Money scams targeting mobile phone users in Zambia. Our research focuses on empowering individuals with native Bemba and English instruction to maximize retention and digital readiness.',
-              'Amasambililo aya yalipangwa pakuti abantu muno Zambia bengaicingilila kuli bampulamafunde ba ndalama shaba muli foni (MoMo na Airtel money). Ifisambilisho ifi fili mu Cingeleshi na mu Cibemba.'
+              'Amasambililo aya yalipangwa pakuti abantu muno Zambia bengaicingilila kuli bamapulamafunde abengafwaya ukwiba indalama shaba muli foni (MoMo na Airtel money). Ifisambilisho ifi fili mu Cingeleshi na mu Cibemba.'
             )}
           </p>
         </div>

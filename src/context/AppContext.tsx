@@ -1,8 +1,17 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { doc, getDoc, setDoc, collection, addDoc, getDocs, query, orderBy, limit, disableNetwork } from 'firebase/firestore';
-import { db } from '../firebase';
+import { doc, getDoc, setDoc, collection, addDoc, getDocs, query, orderBy, limit, disableNetwork, enableNetwork } from 'firebase/firestore';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, signOut, signInAnonymously } from 'firebase/auth';
+import { db, auth } from '../firebase';
 import { UserProfile, VideoContent, ImageContent, PDFMaterial, Quiz, QuizAttempt, AuditLog, NotificationItem } from '../types';
 import { SAMPLE_VIDEOS, SAMPLE_IMAGES, SAMPLE_PDFS, SAMPLE_QUIZZES } from '../sampleData';
+import {
+  cacheAllQuizzes,
+  cacheSingleQuiz,
+  removeCachedQuiz,
+  queueOfflineQuizAttempt,
+  getQueuedOfflineQuizAttempts,
+  clearQueuedOfflineQuizAttempts
+} from '../utils/quizStorageCache';
 
 const withTimeout = <T extends unknown>(promise: Promise<T>, ms: number, timeoutErrorMsg: string): Promise<T> => {
   return new Promise<T>((resolve, reject) => {
@@ -45,11 +54,13 @@ interface AppContextType {
   loadingAuth: boolean;
   errorMsg: string | null;
   setErrorMsg: (msg: string | null) => void;
-  login: (email: string, pass: string) => Promise<void>;
-  register: (email: string, pass: string, name: string, role: 'admin' | 'learner') => Promise<void>;
+  login: (email: string, pass: string, adminPin?: string) => Promise<void>;
+  register: (email: string, pass: string, name: string, role: 'admin' | 'learner', adminSecretKey?: string) => Promise<void>;
   logout: () => Promise<void>;
-  resetPassword: (email: string, newPassword?: string) => Promise<boolean>;
-  quickLogin: (role: 'admin' | 'learner') => Promise<void>;
+  resetPassword: (email: string, newPassword?: string, adminPin?: string) => Promise<boolean>;
+  quickLogin: (role: 'admin' | 'learner', adminPin?: string) => Promise<void>;
+  getAdminPin: () => string;
+  updateAdminPin: (newPin: string) => boolean;
 
   // Data Collections
   videos: VideoContent[];
@@ -60,8 +71,10 @@ interface AppContextType {
   auditLogs: AuditLog[];
   notifications: NotificationItem[];
   addVideo: (video: Omit<VideoContent, 'id' | 'views' | 'downloads' | 'createdAt'>) => Promise<void>;
+  deleteVideo: (id: string) => Promise<void>;
   addImage: (image: Omit<ImageContent, 'id' | 'views' | 'downloads' | 'createdAt'>) => Promise<void>;
   addPdf: (pdf: Omit<PDFMaterial, 'id' | 'downloads' | 'createdAt'>) => Promise<void>;
+  deletePdf: (id: string) => Promise<void>;
   addQuiz: (quiz: Omit<Quiz, 'id' | 'createdAt'>) => Promise<void>;
   deleteQuiz: (id: string) => Promise<void>;
   addQuizAttempt: (attempt: Omit<QuizAttempt, 'id' | 'completedAt'>) => Promise<void>;
@@ -93,8 +106,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         const parsed = JSON.parse(local) as VideoContent[];
         const merged = [...parsed];
         SAMPLE_VIDEOS.forEach(sample => {
-          if (!merged.some(v => v.id === sample.id)) {
-            merged.unshift(sample);
+          const idx = merged.findIndex(v => v.id === sample.id);
+          if (idx === -1) {
+            merged.push(sample);
+          } else {
+            merged[idx] = { ...sample, ...merged[idx] };
           }
         });
         return merged;
@@ -111,7 +127,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         const parsed = JSON.parse(local) as ImageContent[];
         const merged = [...parsed];
         SAMPLE_IMAGES.forEach(sample => {
-          if (!merged.some(img => img.id === sample.id)) {
+          const existingIdx = merged.findIndex(img => img.id === sample.id);
+          if (existingIdx >= 0) {
+            merged[existingIdx] = { ...merged[existingIdx], ...sample };
+          } else {
             merged.unshift(sample);
           }
         });
@@ -124,11 +143,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   });
   const [pdfs, setPdfs] = useState<PDFMaterial[]>(() => {
     try {
-      const local = localStorage.getItem('cyber_academy_custom_pdfs');
-      return local ? JSON.parse(local) : SAMPLE_PDFS;
-    } catch (_) {
-      return SAMPLE_PDFS;
-    }
+      localStorage.removeItem('cyber_academy_custom_pdfs');
+    } catch (_) {}
+    return [];
   });
   const [quizzes, setQuizzes] = useState<Quiz[]>(() => {
     try {
@@ -137,8 +154,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         const parsed = JSON.parse(local) as Quiz[];
         const merged = [...parsed];
         SAMPLE_QUIZZES.forEach(sample => {
-          if (!merged.some(q => q.id === sample.id)) {
-            merged.push(sample);
+          const idx = merged.findIndex(q => q.id === sample.id);
+          if (idx >= 0) {
+            merged[idx] = { ...sample, ...merged[idx], questions: sample.questions };
+          } else {
+            merged.unshift(sample);
           }
         });
         return merged;
@@ -167,18 +187,35 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [notifications, setNotifications] = useState<NotificationItem[]>(() => {
     const defaults = [
       {
+        id: 'notif-gold-scam-alert',
+        title_en: '⚠️ Scam Alert: "Shikulu Mwila" Fake Gold SMS Fraud',
+        title_bm: '⚠️ Chenjelani: Ubufi bwa Golide (Gold) bwa ba "Shikulu Mwila"',
+        message_en: 'A real-world scam SMS is circulating offering 450g gold with 35% discount from "Shikulu Mwila". Never reply or transfer mobile money for transport/testing. View the Infographics Gallery for the full breakdown and protection guide.',
+        message_bm: 'Bapulamafunde baletuma ama SMS pa foni ati bakwete 450g golide kabili balelipila 35% discount kwati ni "Shikulu Mwila". Mwilasuka nangu ukutuma indalama sha MoMo. Moneni icipope muli Gallery pakuti mwishibe ifyo mwingacingilila.',
+        type: 'announcement' as const,
+        createdAt: new Date().toISOString()
+      },
+      {
         id: 'notif-1',
         title_en: 'Welcome to the Platform!',
-        title_bm: 'Mwaiseni kuli bano bashisambilila!',
+        title_bm: 'Mwaiseni!',
         message_en: 'Explore cybersecurity content in both English and Bemba. Take quizzes to earn badges!',
-        message_bm: 'Sambilileni pa fya kacingilila ifya muli foni mu Cingeleshi na Cibemba. Eseni amano yenu muli quizzes!',
+        message_bm: 'Sambilileni pa fya kacingilila ifya muli foni mu Cingeleshi namu Cibemba. Esheni amano yenu muma quizzes!',
         type: 'announcement' as const,
         createdAt: new Date().toISOString()
       }
     ];
     try {
       const local = localStorage.getItem('cyber_academy_custom_notifications');
-      return local ? JSON.parse(local) : defaults;
+      if (local) {
+        const parsed = JSON.parse(local) as NotificationItem[];
+        // Ensure the scam alert notification is always present at top
+        if (!parsed.some(n => n.id === 'notif-gold-scam-alert')) {
+          parsed.unshift(defaults[0]);
+        }
+        return parsed;
+      }
+      return defaults;
     } catch (_) {
       return defaults;
     }
@@ -211,13 +248,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     try {
       if (db) {
-        await setDoc(doc(db, 'audit_logs', logId), newLog);
+        await withTimeout(setDoc(doc(db, 'audit_logs', logId), newLog), 1200, 'Audit write timeout');
       }
     } catch (e) {
       console.warn('Logging to Firestore skipped, using local fallback:', e);
-      try {
-        if (db) await disableNetwork(db);
-      } catch (_) {}
     }
   };
 
@@ -291,111 +325,280 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Fetch Firestore content on load if connected
   useEffect(() => {
     const fetchContent = async () => {
+      if (!db) return;
+
+      // 1. Fetch videos
       try {
-        if (!db) return;
-        
-        // Wrap the very first getDocs call in a fast timeout (e.g., 2000ms)
-        // This ensures if the Firestore project/database is not fully ready or whitelisted,
-        // we quickly skip and disable Firestore networking to prevent "Failed to fetch" console and global errors.
         const videoSnap = await withTimeout(
           getDocs(collection(db, 'videos')),
-          2000,
-          'Firestore connection timed out'
+          3000,
+          'Firestore video fetch timed out'
         );
-
         if (!videoSnap.empty) {
           const fetchedVideos: VideoContent[] = [];
           videoSnap.forEach(d => fetchedVideos.push(d.data() as VideoContent));
+          SAMPLE_VIDEOS.forEach(sample => {
+            if (!fetchedVideos.some(v => v.id === sample.id)) {
+              fetchedVideos.unshift(sample);
+            }
+          });
           setVideos(fetchedVideos);
+        } else {
+          setVideos(SAMPLE_VIDEOS);
         }
+      } catch (err) {
+        console.warn('Using local fallback for videos:', err);
+        setVideos(SAMPLE_VIDEOS);
+      }
 
-        // Fetch images
+      // 2. Fetch images
+      try {
         const imageSnap = await getDocs(collection(db, 'images'));
         if (!imageSnap.empty) {
           const fetchedImages: ImageContent[] = [];
           imageSnap.forEach(d => fetchedImages.push(d.data() as ImageContent));
+          SAMPLE_IMAGES.forEach(sample => {
+            const idx = fetchedImages.findIndex(img => img.id === sample.id);
+            if (idx >= 0) {
+              fetchedImages[idx] = { ...sample, ...fetchedImages[idx] };
+            } else {
+              fetchedImages.unshift(sample);
+            }
+          });
           setImages(fetchedImages);
+        } else {
+          setImages(SAMPLE_IMAGES);
         }
+      } catch (err) {
+        console.warn('Using local fallback for images:', err);
+        setImages(SAMPLE_IMAGES);
+      }
 
-        // Fetch pdfs
+      // 3. Fetch pdfs - purge any residual documents
+      try {
         const pdfSnap = await getDocs(collection(db, 'pdfs'));
         if (!pdfSnap.empty) {
-          const fetchedPdfs: PDFMaterial[] = [];
-          pdfSnap.forEach(d => fetchedPdfs.push(d.data() as PDFMaterial));
-          setPdfs(fetchedPdfs);
+          const { deleteDoc } = await import('firebase/firestore');
+          pdfSnap.forEach(async d => {
+            try { await deleteDoc(d.ref); } catch (_) {}
+          });
         }
+        setPdfs([]);
+      } catch (_) {
+        setPdfs([]);
+      }
 
-        // Fetch quizzes
+      // 4. Fetch quizzes
+      try {
         const quizSnap = await getDocs(collection(db, 'quizzes'));
         if (!quizSnap.empty) {
           const fetchedQuizzes: Quiz[] = [];
           quizSnap.forEach(d => fetchedQuizzes.push(d.data() as Quiz));
+          SAMPLE_QUIZZES.forEach(sample => {
+            const idx = fetchedQuizzes.findIndex(q => q.id === sample.id);
+            if (idx >= 0) {
+              fetchedQuizzes[idx] = { ...sample, ...fetchedQuizzes[idx], questions: sample.questions };
+            } else {
+              fetchedQuizzes.unshift(sample);
+            }
+          });
           setQuizzes(fetchedQuizzes);
+        } else {
+          setQuizzes(SAMPLE_QUIZZES);
         }
+      } catch (err) {
+        console.warn('Using local fallback for quizzes:', err);
+        setQuizzes(SAMPLE_QUIZZES);
+      }
 
-        // Fetch attempts
-        const attemptsSnap = await getDocs(collection(db, 'quiz_attempts'));
-        if (!attemptsSnap.empty) {
-          const fetchedAttempts: QuizAttempt[] = [];
-          attemptsSnap.forEach(d => fetchedAttempts.push(d.data() as QuizAttempt));
-          setAttempts(fetchedAttempts);
+      // 5. Fetch attempts (authenticated users)
+      if (user) {
+        try {
+          const attemptsSnap = await getDocs(collection(db, 'quiz_attempts'));
+          if (!attemptsSnap.empty) {
+            const fetchedAttempts: QuizAttempt[] = [];
+            attemptsSnap.forEach(d => fetchedAttempts.push(d.data() as QuizAttempt));
+            setAttempts(fetchedAttempts);
+          }
+        } catch (err) {
+          console.warn('Could not load cloud quiz attempts, using local storage attempts:', err);
         }
+      }
 
-        // Fetch notifications
+      // 6. Fetch notifications
+      try {
         const notifSnap = await getDocs(collection(db, 'notifications'));
         if (!notifSnap.empty) {
           const fetchedNotifs: NotificationItem[] = [];
           notifSnap.forEach(d => fetchedNotifs.push(d.data() as NotificationItem));
           setNotifications(fetchedNotifs);
         }
+      } catch (_) {}
 
-        // Fetch audit logs (admin only)
-        const logSnap = await getDocs(query(collection(db, 'audit_logs'), orderBy('timestamp', 'desc'), limit(100)));
-        if (!logSnap.empty) {
-          const fetchedLogs: AuditLog[] = [];
-          logSnap.forEach(d => fetchedLogs.push(d.data() as AuditLog));
-          setAuditLogs(fetchedLogs);
-        }
-
-      } catch (e) {
-        console.warn('Firestore database read skipped or timed out, enabling offline fallback and disabling network:', e);
+      // 7. Fetch audit logs (admin role only)
+      if (profile?.role === 'admin') {
         try {
-          if (db) {
-            await disableNetwork(db);
+          const logSnap = await getDocs(query(collection(db, 'audit_logs'), orderBy('timestamp', 'desc'), limit(100)));
+          if (!logSnap.empty) {
+            const fetchedLogs: AuditLog[] = [];
+            logSnap.forEach(d => fetchedLogs.push(d.data() as AuditLog));
+            setAuditLogs(fetchedLogs);
           }
         } catch (err) {
-          console.warn('Could not disable Firestore network:', err);
+          console.warn('Could not load audit logs for admin:', err);
         }
       }
     };
 
     fetchContent();
-  }, [user]);
+  }, [user, profile?.role]);
+
+  // Auto-cache all quiz questions in localStorage for offline practice
+  useEffect(() => {
+    if (quizzes && quizzes.length > 0) {
+      cacheAllQuizzes(quizzes);
+    }
+  }, [quizzes]);
+
+  // Synchronize any offline-completed quiz attempts to cloud database when back online
+  useEffect(() => {
+    const handleOnlineSync = async () => {
+      const queued = getQueuedOfflineQuizAttempts();
+      if (queued.length > 0 && db) {
+        try {
+          for (const attempt of queued) {
+            await withTimeout(setDoc(doc(db, 'quiz_attempts', attempt.id), attempt), 2500, 'Sync timeout');
+          }
+          clearQueuedOfflineQuizAttempts();
+          console.log(`[QuizCache] Successfully synced ${queued.length} offline quiz attempt(s) to cloud database.`);
+        } catch (err) {
+          console.warn('[QuizCache] Failed syncing offline attempts, will retry next connection:', err);
+        }
+      }
+    };
+
+    window.addEventListener('online', handleOnlineSync);
+    if (typeof navigator !== 'undefined' && navigator.onLine) {
+      handleOnlineSync();
+    }
+
+    return () => {
+      window.removeEventListener('online', handleOnlineSync);
+    };
+  }, []);
+
+  const getAdminPin = (): string => {
+    try {
+      return localStorage.getItem('cyber_academy_admin_pin') || '260966';
+    } catch (_) {
+      return '260966';
+    }
+  };
+
+  const updateAdminPin = (newPin: string): boolean => {
+    if (!newPin || newPin.trim().length < 4) {
+      throw new Error(language === 'bm' ? 'Admin PIN ifwile ukukwata ifipendo ukucila pali 4.' : 'Admin PIN must be at least 4 digits.');
+    }
+    localStorage.setItem('cyber_academy_admin_pin', newPin.trim());
+    logActivity('Security Configuration', 'Admin Master Security PIN updated');
+    return true;
+  };
 
   // Authentications
-  const login = async (email: string, pass: string) => {
+  const login = async (email: string, pass: string, adminPin?: string) => {
     setErrorMsg(null);
     try {
       if (!email || !pass) {
         throw new Error(language === 'bm' ? 'Lembeni email na password mukwai.' : 'Please enter your email and password.');
       }
 
-      const storedUsers = localStorage.getItem('cyber_academy_users');
-      const usersList = storedUsers ? JSON.parse(storedUsers) : [];
+      const normalizedEmail = email.trim().toLowerCase();
+      const isAdminEmail = normalizedEmail === 'lewismusengo19@gmail.com';
 
-      // Check if user exists
-      const foundUser = usersList.find((u: any) => u.email.toLowerCase() === email.toLowerCase());
-      if (!foundUser) {
-        throw new Error(language === 'bm'
-          ? 'Tapaba uyu uwalembeshiwa na iyi email. Lembelembeni lipya.'
-          : 'No user found with this email. Please register first.');
+      // 1. Check local storage registry
+      const storedUsers = localStorage.getItem('cyber_academy_users');
+      let usersList: any[] = [];
+      if (storedUsers) {
+        try {
+          usersList = JSON.parse(storedUsers);
+        } catch (_) {
+          usersList = [];
+        }
       }
 
-      // Check password
-      if (foundUser.password !== pass) {
-        throw new Error(language === 'bm'
-          ? 'Password tailungeme. Eseniko na kabili.'
-          : 'Incorrect password. Please try again.');
+      let foundUser = usersList.find((u: any) => u.email?.toLowerCase() === normalizedEmail);
+
+      // 2. Attempt Firebase Auth authentication for cloud sync
+      let firebaseUid: string | null = null;
+      if (auth) {
+        try {
+          const cred = await signInWithEmailAndPassword(auth, normalizedEmail, pass);
+          firebaseUid = cred.user.uid;
+        } catch (fbErr: any) {
+          console.warn('Firebase cloud auth notice:', fbErr?.code || fbErr?.message);
+        }
+      }
+
+      // If not in local users list, but Firebase Auth succeeded or cloud document exists:
+      if (!foundUser && firebaseUid && db) {
+        try {
+          const userDoc = await getDoc(doc(db, 'users', firebaseUid));
+          if (userDoc.exists()) {
+            const data = userDoc.data() as UserProfile;
+            foundUser = {
+              uid: firebaseUid,
+              email: normalizedEmail,
+              password: pass,
+              displayName: data.displayName || normalizedEmail.split('@')[0],
+              role: data.role || (isAdminEmail ? 'admin' : 'learner'),
+              createdAt: data.createdAt || new Date().toISOString()
+            };
+            usersList.push(foundUser);
+            localStorage.setItem('cyber_academy_users', JSON.stringify(usersList));
+          }
+        } catch (_) {}
+      }
+
+      // If user is still not found:
+      if (!foundUser) {
+        throw new Error(
+          language === 'bm' 
+            ? 'Account tailiko na email iyi. Mukwai lembesheni (Register) pakuti mupange account.' 
+            : 'No account found with this email. Please click "Register" to create your free account.'
+        );
+      }
+
+      // If user is found, verify password!
+      if (foundUser.password && foundUser.password !== pass) {
+        throw new Error(
+          language === 'bm'
+            ? 'Password taili bwino kuli iyi account. Esheni nakabili nangu cinjeni password.'
+            : 'Incorrect password for this account. Please try again or use "Forgot Password?" to reset.'
+        );
+      }
+
+      // 3. CRITICAL SECURITY GUARD: Administrator Dual-Factor PIN Check
+      // If authenticating as Administrator, require valid Admin Security PIN!
+      if (isAdminEmail || foundUser.role === 'admin') {
+        const currentPin = getAdminPin();
+        if (!adminPin || adminPin.trim() !== currentPin) {
+          throw new Error(
+            language === 'bm'
+              ? 'Administrator akwete 2FA security. Mukwai bikenipo Admin Security PIN (6-digit) pakuti mwingile.'
+              : 'Administrator Dual-Factor Security: A valid Admin Security PIN (6 digits) is strictly required to log in as Administrator.'
+          );
+        }
+      }
+
+      // Ensure admin privileges if email is admin
+      if (isAdminEmail) {
+        foundUser.role = 'admin';
+      }
+
+      // Sync UID if Firebase Auth returned a real UID
+      if (firebaseUid && foundUser.uid !== firebaseUid) {
+        foundUser.uid = firebaseUid;
+        localStorage.setItem('cyber_academy_users', JSON.stringify(usersList));
       }
 
       const userProfile: UserProfile = {
@@ -413,40 +616,104 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setUser(session.user);
       setProfile(userProfile);
 
-      await logActivity('Login', 'User authenticated locally');
+      // Ensure Firestore network is active
+      try {
+        if (db) await enableNetwork(db);
+      } catch (_) {}
+
+      await logActivity('Login', `User ${foundUser.email} authenticated as ${foundUser.role}`);
     } catch (e: any) {
+      console.warn('Login warning:', e.message || e);
       setErrorMsg(e.message || 'Login failed.');
       throw e;
     }
   };
 
-  const register = async (email: string, pass: string, name: string, role: 'admin' | 'learner') => {
+  const register = async (email: string, pass: string, name: string, role: 'admin' | 'learner', adminSecretKey?: string) => {
     setErrorMsg(null);
     try {
       if (!email || !pass || !name) {
-        throw new Error(language === 'bm' ? 'Sambilisheni ifiputulwa fyonse mukwai.' : 'Please fill in all fields.');
+        throw new Error(language === 'bm' ? 'Lembeni mufiputulwa fyonse mukwai.' : 'Please fill in all fields (Name, Email, and Password).');
+      }
+
+      const trimmedName = name.trim();
+      if (trimmedName.length < 2) {
+        throw new Error(language === 'bm' ? 'Lembeni amashina yenu bwino.' : 'Please enter your full name.');
+      }
+
+      const normalizedEmail = email.trim().toLowerCase();
+      if (!normalizedEmail.includes('@') || !normalizedEmail.includes('.')) {
+        throw new Error(language === 'bm' ? 'Email taili bwino. Bikenipo email yenu iyabomba.' : 'Please enter a valid email address.');
+      }
+
+      if (pass.length < 4) {
+        throw new Error(language === 'bm' ? 'Password ifwile ukukwata ifilembo ukucila pali 4.' : 'Password must be at least 4 characters long.');
       }
       
       const storedUsers = localStorage.getItem('cyber_academy_users');
-      const usersList = storedUsers ? JSON.parse(storedUsers) : [];
-      
-      // Check if user already exists
-      const userExists = usersList.find((u: any) => u.email.toLowerCase() === email.toLowerCase());
-      if (userExists) {
-        throw new Error(language === 'bm' 
-          ? 'Email iyi yalilembeshiwa kale. Lembeni imbi.' 
-          : 'This email is already registered. Please sign in or use a different email.');
+      let usersList: any[] = [];
+      if (storedUsers) {
+        try {
+          usersList = JSON.parse(storedUsers);
+        } catch (_) {
+          usersList = [];
+        }
       }
 
-      // If email is lewismusengo19@gmail.com, automatically grant admin
-      const finalRole = email.toLowerCase() === 'lewismusengo19@gmail.com' ? 'admin' : role;
+      // Check if user already exists
+      const existingUser = usersList.find((u: any) => u.email?.toLowerCase() === normalizedEmail);
+      if (existingUser) {
+        throw new Error(
+          language === 'bm'
+            ? 'Account epoili kale na email iyi. Mukwai ingileni (Sign In).'
+            : 'An account with this email already exists. Please switch to Sign In.'
+        );
+      }
+
+      const isAdminEmail = normalizedEmail === 'lewismusengo19@gmail.com';
       
-      const uid = 'user-' + Math.random().toString(36).substr(2, 9);
+      // Protect administrator role from unauthorized registration
+      if (role === 'admin' || isAdminEmail) {
+        const currentPin = getAdminPin();
+        const masterKey = 'ADMIN-ZM-2026';
+        if (!adminSecretKey || (adminSecretKey.trim() !== currentPin && adminSecretKey.trim() !== masterKey)) {
+          throw new Error(
+            language === 'bm'
+              ? 'Security Key iya Admin taili bwino. Tamusuminshikwa ukupanga account ya Administrator ukwabula authorization.'
+              : 'Unauthorized: A valid Admin Security Authorization Key is required to create an Administrator account.'
+          );
+        }
+      }
+
+      const finalRole = (role === 'admin' || isAdminEmail) ? 'admin' : 'learner';
+      
+      let uid = 'user-' + Date.now().toString(36) + '-' + Math.random().toString(36).substr(2, 6);
+
+      // Attempt real Firebase Auth registration
+      if (auth) {
+        try {
+          const cred = await createUserWithEmailAndPassword(auth, normalizedEmail, pass);
+          uid = cred.user.uid;
+          try {
+            await updateProfile(cred.user, { displayName: trimmedName });
+          } catch (_) {}
+        } catch (fbErr: any) {
+          console.warn('Firebase Auth registration notice:', fbErr?.code || fbErr?.message);
+          if (fbErr?.code === 'auth/email-already-in-use') {
+            throw new Error(
+              language === 'bm'
+                ? 'Account epoili kale na email iyi. Mukwai ingileni (Sign In).'
+                : 'An account with this email already exists in our cloud system. Please switch to Sign In.'
+            );
+          }
+        }
+      }
+
       const newUser = {
         uid,
-        email: email.toLowerCase(),
+        email: normalizedEmail,
         password: pass,
-        displayName: name,
+        displayName: trimmedName,
         role: finalRole,
         createdAt: new Date().toISOString()
       };
@@ -456,14 +723,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
       const newUserProfile: UserProfile = {
         uid,
-        email: email.toLowerCase(),
-        displayName: name,
+        email: normalizedEmail,
+        displayName: trimmedName,
         role: finalRole,
         createdAt: newUser.createdAt
       };
 
       // Set active session
-      const session = { user: { uid, email: email.toLowerCase() }, profile: newUserProfile };
+      const session = { user: { uid, email: normalizedEmail }, profile: newUserProfile };
       localStorage.setItem('cyber_academy_session', JSON.stringify(session));
       
       setUser(session.user);
@@ -472,13 +739,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       // Save to Firestore as backup if available
       try {
         if (db) {
-          await setDoc(doc(db, 'users', uid), newUserProfile);
+          await enableNetwork(db);
+          await withTimeout(setDoc(doc(db, 'users', uid), newUserProfile), 3000, 'User profile write timeout');
         }
       } catch (e) {
         console.warn('Could not save user profile to cloud database, using local storage session:', e);
       }
 
-      await logActivity('Register', `New user registered locally as ${finalRole}`);
+      await logActivity('Register', `New user registered as ${finalRole}`);
     } catch (e: any) {
       setErrorMsg(e.message || 'Registration failed.');
       throw e;
@@ -486,36 +754,73 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const logout = async () => {
-    await logActivity('Logout', 'User signed out');
-    localStorage.removeItem('cyber_academy_session');
+    try {
+      localStorage.removeItem('cyber_academy_session');
+    } catch (e) {
+      console.warn('Error clearing session from localStorage:', e);
+    }
+
+    // Instantly wipe state so UI updates to signed-out state immediately
     setUser(null);
     setProfile(null);
+    setErrorMsg(null);
+
+    // If currently viewing the admin portal, redirect safely to home
+    setActiveSection(prev => (prev === 'admin' ? 'home' : prev));
+
+    // Sign out from Firebase auth if active (non-blocking)
+    try {
+      if (auth && auth.currentUser) {
+        await auth.signOut();
+      }
+    } catch (e) {
+      console.warn('Firebase auth signOut warning:', e);
+    }
+
+    // Log the event without blocking UI completion
+    logActivity('Logout', 'User signed out successfully').catch(e => {
+      console.warn('Audit log write for logout skipped:', e);
+    });
   };
 
-  const resetPassword = async (email: string, newPassword?: string): Promise<boolean> => {
+  const resetPassword = async (email: string, newPassword?: string, adminPin?: string): Promise<boolean> => {
     setErrorMsg(null);
     try {
       if (!email) {
         throw new Error(language === 'bm' ? 'Lembeni email yenu mukwai.' : 'Please enter your email address.');
       }
+      const normalizedEmail = email.trim().toLowerCase();
+      const isAdminEmail = normalizedEmail === 'lewismusengo19@gmail.com';
+
+      // Require Admin PIN to reset admin account
+      if (isAdminEmail) {
+        const currentPin = getAdminPin();
+        if (!adminPin || adminPin.trim() !== currentPin) {
+          throw new Error(
+            language === 'bm'
+              ? 'Admin Security PIN ifwile yabikwapo pakuti mucinje password ya Administrator.'
+              : 'Admin Security Verification required: You must provide the valid Admin Security PIN to reset the administrator password.'
+          );
+        }
+      }
+
       const targetPass = newPassword && newPassword.trim().length >= 4 ? newPassword.trim() : 'password123';
       const storedUsers = localStorage.getItem('cyber_academy_users');
       let usersList = storedUsers ? JSON.parse(storedUsers) : [];
 
-      const userIndex = usersList.findIndex((u: any) => u.email?.toLowerCase() === email.toLowerCase());
+      const userIndex = usersList.findIndex((u: any) => u.email?.toLowerCase() === normalizedEmail);
       if (userIndex !== -1) {
         // Update existing user password
         usersList[userIndex].password = targetPass;
         localStorage.setItem('cyber_academy_users', JSON.stringify(usersList));
       } else {
-        // Auto-create/seed the user so they are immediately unblocked
-        const finalRole = email.toLowerCase() === 'lewismusengo19@gmail.com' ? 'admin' : 'learner';
+        const finalRole = isAdminEmail ? 'admin' : 'learner';
         const uid = 'user-' + Math.random().toString(36).substr(2, 9);
         const newUser = {
           uid,
-          email: email.toLowerCase(),
+          email: normalizedEmail,
           password: targetPass,
-          displayName: email.split('@')[0],
+          displayName: normalizedEmail.split('@')[0],
           role: finalRole,
           createdAt: new Date().toISOString()
         };
@@ -531,9 +836,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  const quickLogin = async (role: 'admin' | 'learner') => {
+  const quickLogin = async (role: 'admin' | 'learner', adminPin?: string) => {
     setErrorMsg(null);
     try {
+      if (role === 'admin') {
+        const currentPin = getAdminPin();
+        if (!adminPin || adminPin.trim() !== currentPin) {
+          throw new Error(
+            language === 'bm'
+              ? 'Admin 1-click login yalisalwa. Kufwaya Admin Security PIN.'
+              : '1-click demo login is disabled for Administrator accounts. Please use standard login with your password and Admin Security PIN.'
+          );
+        }
+      }
+
       const email = role === 'admin' ? 'lewismusengo19@gmail.com' : 'learner@zambiacyber.org';
       const displayName = role === 'admin' ? 'Lewis Musengo (Admin)' : 'Chanda Mulenga (Learner)';
       const uid = role === 'admin' ? 'seeded-admin' : 'seeded-learner';
@@ -552,10 +868,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setUser(session.user);
       setProfile(userProfile);
 
-      await logActivity('Quick Demo Login', `Authenticated as ${role} via quick demo access`);
+      await logActivity('Demo Login', `Authenticated as ${role} via demo access`);
     } catch (e: any) {
-      console.error('Quick login failed:', e);
-      setErrorMsg(e.message || 'Quick login failed.');
+      console.error('Login failed:', e);
+      setErrorMsg(e.message || 'Login failed.');
+      throw e;
     }
   };
 
@@ -583,6 +900,25 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
     } catch (e) {
       console.warn('Could not save video to Firestore:', e);
+    }
+  };
+
+  const deleteVideo = async (id: string) => {
+    const deleted = videos.find(v => v.id === id);
+    setVideos(prev => {
+      const updated = prev.filter(v => v.id !== id);
+      localStorage.setItem('cyber_academy_custom_videos', JSON.stringify(updated));
+      return updated;
+    });
+    await logActivity('Delete Video', `Deleted video ID: ${id} (${deleted?.title_en || 'unknown'})`);
+
+    try {
+      if (db) {
+        const { deleteDoc } = await import('firebase/firestore');
+        await deleteDoc(doc(db, 'videos', id));
+      }
+    } catch (e) {
+      console.warn('Could not delete video from Firestore:', e);
     }
   };
 
@@ -637,6 +973,25 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
+  const deletePdf = async (id: string) => {
+    const deleted = pdfs.find(p => p.id === id);
+    setPdfs(prev => {
+      const updated = prev.filter(p => p.id !== id);
+      localStorage.setItem('cyber_academy_custom_pdfs', JSON.stringify(updated));
+      return updated;
+    });
+    await logActivity('Delete PDF', `Deleted PDF ID: ${id} (${deleted?.title_en || 'unknown'})`);
+
+    try {
+      if (db) {
+        const { deleteDoc } = await import('firebase/firestore');
+        await deleteDoc(doc(db, 'pdfs', id));
+      }
+    } catch (e) {
+      console.warn('Could not delete PDF from Firestore:', e);
+    }
+  };
+
   const addQuiz = async (newQuiz: Omit<Quiz, 'id' | 'createdAt'>) => {
     const quizId = 'quiz-' + Date.now();
     const completeQuiz: Quiz = {
@@ -650,6 +1005,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       localStorage.setItem('cyber_academy_custom_quizzes', JSON.stringify(updated));
       return updated;
     });
+    // Immediately cache questions in local storage
+    cacheSingleQuiz(completeQuiz);
     await logActivity('Create Quiz', `Created quiz: ${newQuiz.title_en}`);
 
     try {
@@ -668,6 +1025,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       localStorage.setItem('cyber_academy_custom_quizzes', JSON.stringify(updated));
       return updated;
     });
+    // Remove from local storage cache
+    removeCachedQuiz(id);
     await logActivity('Delete Quiz', `Deleted quiz ID: ${id} (${deleted?.title_en || 'unknown'})`);
 
     try {
@@ -682,10 +1041,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const addQuizAttempt = async (attempt: Omit<QuizAttempt, 'id' | 'completedAt'>) => {
     const attemptId = 'attempt-' + Date.now();
+    const isCurrentlyOnline = typeof navigator !== 'undefined' ? navigator.onLine : true;
+
     const completeAttempt: QuizAttempt = {
       ...attempt,
       id: attemptId,
-      completedAt: new Date().toISOString()
+      completedAt: new Date().toISOString(),
+      isOfflineAttempt: !isCurrentlyOnline
     };
 
     setAttempts(prev => {
@@ -693,14 +1055,23 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       localStorage.setItem('cyber_academy_custom_attempts', JSON.stringify(updated));
       return updated;
     });
-    await logActivity('Take Quiz', `Completed quiz ${attempt.quizTitle_en} with score ${attempt.score}/${attempt.totalQuestions}`);
 
-    try {
-      if (db) {
-        await setDoc(doc(db, 'quiz_attempts', attemptId), completeAttempt);
+    // If offline, queue the attempt so it automatically uploads when reconnected
+    if (!isCurrentlyOnline) {
+      queueOfflineQuizAttempt(completeAttempt);
+    }
+
+    await logActivity('Take Quiz', `Completed quiz ${attempt.quizTitle_en} with score ${attempt.score}/${attempt.totalQuestions}${!isCurrentlyOnline ? ' (Offline Practice)' : ''}`);
+
+    if (isCurrentlyOnline) {
+      try {
+        if (db) {
+          await setDoc(doc(db, 'quiz_attempts', attemptId), completeAttempt);
+        }
+      } catch (e) {
+        console.warn('Could not save quiz attempt to Firestore, queuing offline:', e);
+        queueOfflineQuizAttempt(completeAttempt);
       }
-    } catch (e) {
-      console.warn('Could not save quiz attempt to Firestore:', e);
     }
   };
 
@@ -740,8 +1111,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       activeSection, setActiveSection,
       user, profile, loadingAuth, errorMsg, setErrorMsg,
       login, register, logout, resetPassword, quickLogin,
+      getAdminPin, updateAdminPin,
       videos, images, pdfs, quizzes, attempts, auditLogs, notifications,
-      addVideo, addImage, addPdf, addQuiz, deleteQuiz, addQuizAttempt, logActivity, addNotification,
+      addVideo, deleteVideo, addImage, addPdf, deletePdf, addQuiz, deleteQuiz, addQuizAttempt, logActivity, addNotification,
       translate
     }}>
       {children}
