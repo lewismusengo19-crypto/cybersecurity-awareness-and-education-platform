@@ -323,149 +323,252 @@ export const Navbar: React.FC = () => {
             )}
           </div>
 
-          {/* Mobile menu toggle */}
-          <div className="md:hidden flex items-center space-x-2">
+          {/* Mobile Right Quick Controls */}
+          <div className="md:hidden flex items-center space-x-1.5">
+            {/* Quick Offline indicator */}
+            <button
+              id="mobile-nav-offline-quick-btn"
+              onClick={() => setShowOfflineModal(true)}
+              className={`p-1.5 rounded-lg border text-xs flex items-center space-x-1 ${
+                highContrast ? 'border-yellow-400 text-yellow-400' : 'border-slate-800 bg-slate-850 text-slate-300'
+              }`}
+              title={translate('Offline Lessons', 'Ifyasungwa')}
+            >
+              <HardDrive className="h-4 w-4 text-green-400" />
+              {cachedItems.length > 0 && (
+                <span className="text-[10px] font-mono text-green-400 font-bold">{cachedItems.length}</span>
+              )}
+            </button>
+
             {/* Language Switch Mobile */}
             <button
               id="lang-switch-mobile"
               onClick={() => setLanguage(language === 'en' ? 'bm' : 'en')}
-              className={`p-1.5 rounded border text-[10px] font-mono ${
-                highContrast ? 'border-yellow-400 text-yellow-400' : 'border-slate-700 text-slate-300'
+              className={`px-2 py-1.5 rounded-lg border text-xs font-mono font-bold ${
+                highContrast ? 'border-yellow-400 text-yellow-400' : 'border-slate-800 bg-slate-850 text-slate-200'
               }`}
+              title={translate('Toggle Language (English / Bemba)', 'Cinjani Ululimi')}
             >
               {language.toUpperCase()}
             </button>
 
+            {/* Hamburger / Menu toggle */}
             <button
               id="mobile-menu-btn"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className={`p-2 rounded-md ${
-                highContrast ? 'text-yellow-400 hover:bg-yellow-400/20' : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+              onClick={() => setMobileMenuOpen(true)}
+              className={`p-2 rounded-xl border transition-all active:scale-95 ${
+                highContrast
+                  ? 'border-yellow-400 text-yellow-400 hover:bg-yellow-400/20'
+                  : 'border-slate-800 bg-slate-850 text-slate-200 hover:text-white hover:bg-slate-800'
               }`}
+              aria-label={translate('Open Menu', 'Isuleni Menu')}
             >
-              <Menu className="h-6 w-6" />
+              <Menu className="h-5 w-5" />
             </button>
           </div>
         </div>
       </div>
 
-      {/* Mobile Navigation Panel */}
+      {/* Slide-over Mobile Navigation Drawer */}
       {mobileMenuOpen && (
-        <div className={`md:hidden border-t px-2 pt-2 pb-4 space-y-1 ${
-          highContrast ? 'bg-black border-yellow-400 text-yellow-400' : 'bg-slate-850 border-slate-800 text-white'
-        }`}>
-          {menuItems.map((item) => (
-            <button
-              key={item.id}
-              id={`mobile-nav-item-${item.id}`}
-              onClick={() => {
-                setActiveSection(item.id);
-                setMobileMenuOpen(false);
-              }}
-              className={`block w-full text-left px-3 py-2 rounded-md text-base font-medium ${
-                activeSection === item.id
-                  ? highContrast 
-                    ? 'bg-yellow-400 text-black font-bold' 
-                    : 'bg-green-600 text-white'
-                  : 'hover:bg-slate-800'
-              }`}
-            >
-              {translate(item.en, item.bm)}
-            </button>
-          ))}
+        <div className="fixed inset-0 z-[100] md:hidden">
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 bg-black/80 backdrop-blur-sm transition-opacity"
+            onClick={() => setMobileMenuOpen(false)}
+            aria-hidden="true"
+          />
 
-          {profile?.role === 'admin' && (
-            <button
-              id="mobile-nav-item-admin"
-              onClick={() => {
-                setActiveSection('admin');
-                setMobileMenuOpen(false);
-              }}
-              className="block w-full text-left px-3 py-2 rounded-md text-base font-bold text-orange-400 border border-orange-500/30 hover:bg-orange-500/10"
-            >
-              {translate('Admin Portal', 'Ifisambilisho Fyaba Admin')}
-            </button>
-          )}
-
-          {/* Accessibility quick triggers in mobile */}
-          <div className="border-t border-slate-700 pt-3 mt-3 flex items-center justify-around">
-            <button
-              id="contrast-toggle-mobile"
-              onClick={() => setHighContrast(!highContrast)}
-              className={`p-2 rounded border text-xs flex items-center space-x-1 ${
-                highContrast ? 'bg-yellow-400 text-black border-yellow-400' : 'border-slate-700 text-slate-300'
-              }`}
-            >
-              <Eye className="h-4 w-4" />
-              <span>{translate('Contrast', 'Contrast')}</span>
-            </button>
-
-            <button
-              id="text-size-toggle-mobile"
-              onClick={() => setTextSize(textSize === 'normal' ? 'large' : 'normal')}
-              className={`p-2 rounded border text-xs flex items-center space-x-1 ${
-                textSize === 'large' ? 'bg-green-600 text-white border-green-600' : 'border-slate-700 text-slate-300'
-              }`}
-            >
-              <Type className="h-4 w-4" />
-              <span>{translate('Large Text', 'Amalembo ayakalamba')}</span>
-            </button>
-          </div>
-
-          {/* Offline Storage Trigger & PWA Install in Mobile */}
-          <div className="border-t border-slate-700 pt-3 mt-3 flex items-center justify-between px-3">
-            <button
-              id="mobile-offline-lib-btn"
-              onClick={() => {
-                setShowOfflineModal(true);
-                setMobileMenuOpen(false);
-              }}
-              className="p-2 rounded-xl border border-slate-700 text-xs flex items-center space-x-2 text-slate-300 hover:bg-slate-800"
-            >
-              <HardDrive className="h-4 w-4 text-green-400" />
-              <span>{translate('Offline Lessons', 'Ifisambilisho')} ({cachedItems.length})</span>
-            </button>
-
-            <PWAInstallButton compact />
-          </div>
-
-          <div className="border-t border-slate-700 pt-3 mt-3 px-3">
-            {user ? (
-              <div className="space-y-2">
-                <div className="flex items-center space-x-2 text-xs text-slate-300 bg-slate-900 px-3 py-2 rounded-lg border border-slate-800">
-                  <UserIcon className="h-3.5 w-3.5 text-green-400 shrink-0" />
-                  <span className="truncate">{profile?.displayName || user.email}</span>
+          {/* Drawer content */}
+          <div className={`fixed inset-y-0 right-0 w-full max-w-xs sm:max-w-sm flex flex-col shadow-2xl transition-transform border-l ${
+            highContrast ? 'bg-black border-yellow-400 text-yellow-400' : 'bg-slate-900 border-slate-800 text-white'
+          }`}>
+            {/* Drawer Header */}
+            <div className="flex items-center justify-between p-4 border-b border-slate-800">
+              <div className="flex items-center space-x-2">
+                <div className={`p-1.5 rounded-lg ${highContrast ? 'bg-yellow-400 text-black' : 'bg-green-600 text-white'}`}>
+                  <Shield className="h-5 w-5" />
                 </div>
+                <div>
+                  <h3 className="font-bold text-sm leading-tight text-white">
+                    {translate('Cyber Academy', 'Ukuicingilila')}
+                  </h3>
+                  <span className="text-[10px] text-slate-400 font-mono">ZAMBIA • {language.toUpperCase()}</span>
+                </div>
+              </div>
+
+              <button
+                id="close-mobile-menu-btn"
+                onClick={() => setMobileMenuOpen(false)}
+                className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer"
+                aria-label={translate('Close Menu', 'Isaleni Menu')}
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* User Profile Card in Drawer */}
+            <div className="p-4 border-b border-slate-800 bg-slate-950/40">
+              {user ? (
+                <div className="space-y-2.5">
+                  <div className="flex items-center space-x-2.5">
+                    <div className="w-9 h-9 rounded-full bg-green-500/20 border border-green-500/40 flex items-center justify-center text-green-400 shrink-0 font-bold">
+                      {profile?.displayName ? profile.displayName.charAt(0).toUpperCase() : 'U'}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-bold text-white truncate">{profile?.displayName || 'Learner'}</p>
+                      <p className="text-[11px] text-slate-400 truncate">{user.email}</p>
+                    </div>
+                  </div>
+                  <button
+                    id="drawer-logout-btn"
+                    onClick={async (e) => {
+                      e.preventDefault();
+                      await logout();
+                      setMobileMenuOpen(false);
+                    }}
+                    className="w-full py-2 px-3 rounded-xl bg-red-600/20 hover:bg-red-600 border border-red-500/30 text-red-300 hover:text-white text-xs font-semibold flex items-center justify-center space-x-2 transition cursor-pointer"
+                  >
+                    <LogOut className="h-3.5 w-3.5" />
+                    <span>{translate('Sign Out', 'Ukufumamo')}</span>
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <p className="text-xs text-slate-300">
+                    {translate('Track your progress & earn cyber certificates:', 'Sungeni ifyo mwasambilila:')}
+                  </p>
+                  <button
+                    id="drawer-login-btn"
+                    onClick={() => {
+                      setAuthMode('login');
+                      setErrorMsg(null);
+                      setResetSuccessMsg(null);
+                      setShowAuthModal(true);
+                      setMobileMenuOpen(false);
+                    }}
+                    className={`w-full py-2.5 px-4 rounded-xl font-bold text-xs flex items-center justify-center space-x-2 transition shadow cursor-pointer ${
+                      highContrast ? 'bg-yellow-400 text-black' : 'bg-green-600 hover:bg-green-500 text-white'
+                    }`}
+                  >
+                    <LogIn className="h-4 w-4" />
+                    <span>{translate('Sign In / Register', 'Ingileni / Lembesheni')}</span>
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Navigation items list */}
+            <div className="flex-1 overflow-y-auto p-3 space-y-1">
+              <span className="px-3 py-1 text-[10px] uppercase font-mono tracking-wider text-slate-500 block">
+                {translate('Navigation', 'Imyendele')}
+              </span>
+              {menuItems.map((item) => (
                 <button
-                  id="logout-btn-mobile"
-                  onClick={async (e) => {
-                    e.preventDefault();
-                    await logout();
+                  key={item.id}
+                  id={`mobile-nav-item-${item.id}`}
+                  onClick={() => {
+                    setActiveSection(item.id);
+                    setMobileMenuOpen(false);
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                  className={`w-full flex items-center justify-between px-3 py-3 rounded-xl text-sm font-medium transition cursor-pointer ${
+                    activeSection === item.id
+                      ? highContrast
+                        ? 'bg-yellow-400 text-black font-extrabold shadow'
+                        : 'bg-green-600 text-white font-bold shadow'
+                      : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                  }`}
+                >
+                  <span>{translate(item.en, item.bm)}</span>
+                  <ArrowRight className="h-4 w-4 opacity-70" />
+                </button>
+              ))}
+
+              {profile?.role === 'admin' && (
+                <button
+                  id="mobile-nav-item-admin"
+                  onClick={() => {
+                    setActiveSection('admin');
+                    setMobileMenuOpen(false);
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                  className="w-full flex items-center justify-between px-3 py-3 rounded-xl text-sm font-bold text-orange-400 border border-orange-500/40 bg-orange-500/10 hover:bg-orange-500/20 transition cursor-pointer mt-2"
+                >
+                  <div className="flex items-center space-x-2">
+                    <Shield className="h-4 w-4 text-orange-400" />
+                    <span>{translate('Admin Portal', 'Admin Portal')}</span>
+                  </div>
+                  <ArrowRight className="h-4 w-4 text-orange-400" />
+                </button>
+              )}
+
+              {/* Offline Educational Library link */}
+              <div className="pt-3 mt-3 border-t border-slate-800 space-y-2">
+                <span className="px-3 text-[10px] uppercase font-mono tracking-wider text-slate-500 block">
+                  {translate('Educational Tools', 'Ifikwabilo')}
+                </span>
+
+                <button
+                  id="drawer-offline-lib-btn"
+                  onClick={() => {
+                    setShowOfflineModal(true);
                     setMobileMenuOpen(false);
                   }}
-                  className="w-full py-2.5 px-3 rounded-lg bg-red-600/90 hover:bg-red-600 text-white text-xs font-bold flex items-center justify-center space-x-2 cursor-pointer transition-all shadow"
+                  className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl border border-slate-800 bg-slate-950/60 text-slate-300 hover:bg-slate-800 transition text-xs font-semibold cursor-pointer"
                 >
-                  <LogOut className="h-4 w-4" />
-                  <span>{translate('Sign Out', 'Ukufumamo')}</span>
+                  <div className="flex items-center space-x-2">
+                    <HardDrive className="h-4 w-4 text-green-400" />
+                    <span>{translate('Offline Educational Storage', 'Ifyasungwa')}</span>
+                  </div>
+                  <span className="px-2 py-0.5 rounded-full bg-green-500/20 text-green-400 text-[10px] font-mono font-bold">
+                    {cachedItems.length}
+                  </span>
                 </button>
+
+                {/* PWA Install Button inside Drawer */}
+                <div className="pt-1">
+                  <PWAInstallButton />
+                </div>
               </div>
-            ) : (
-              <button
-                id="login-trigger-mobile"
-                onClick={() => {
-                  setAuthMode('login');
-                  setErrorMsg(null);
-                  setResetSuccessMsg(null);
-                  setShowAuthModal(true);
-                  setMobileMenuOpen(false);
-                }}
-                className={`w-full text-center py-2.5 rounded font-bold text-sm cursor-pointer ${
-                  highContrast ? 'bg-yellow-400 text-black' : 'bg-green-600 text-white'
-                }`}
-              >
-                {translate('Sign In', 'Ukwingila')}
-              </button>
-            )}
+
+              {/* Accessibility Settings in Drawer */}
+              <div className="pt-3 mt-3 border-t border-slate-800 space-y-2">
+                <span className="px-3 text-[10px] uppercase font-mono tracking-wider text-slate-500 block">
+                  {translate('Accessibility', 'Ukucita ifingafwa')}
+                </span>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    id="drawer-contrast-toggle"
+                    onClick={() => setHighContrast(!highContrast)}
+                    className={`p-2.5 rounded-xl border text-xs flex flex-col items-center justify-center space-y-1 transition cursor-pointer ${
+                      highContrast ? 'bg-yellow-400 text-black border-yellow-400 font-bold' : 'border-slate-800 bg-slate-950/60 text-slate-300 hover:bg-slate-800'
+                    }`}
+                  >
+                    <Eye className="h-4 w-4" />
+                    <span className="text-[11px]">{translate('Contrast', 'Contrast')}</span>
+                  </button>
+
+                  <button
+                    id="drawer-text-size-toggle"
+                    onClick={() => setTextSize(textSize === 'normal' ? 'large' : 'normal')}
+                    className={`p-2.5 rounded-xl border text-xs flex flex-col items-center justify-center space-y-1 transition cursor-pointer ${
+                      textSize === 'large' ? 'bg-green-600 text-white border-green-600 font-bold' : 'border-slate-800 bg-slate-950/60 text-slate-300 hover:bg-slate-800'
+                    }`}
+                  >
+                    <Type className="h-4 w-4" />
+                    <span className="text-[11px]">{translate('Large Text', 'Amalembo')}</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Drawer Footer */}
+            <div className="p-4 border-t border-slate-800 text-[10px] text-slate-500 font-mono text-center bg-slate-950/60">
+              <p>ZAMBIA CYBERSECURITY INITIATIVE</p>
+              <p className="mt-0.5">BILINGUAL ENGLISH & CIBEMBA</p>
+            </div>
           </div>
         </div>
       )}
@@ -653,7 +756,7 @@ export const Navbar: React.FC = () => {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder={translate('e.g. Chanda Mulenga', 'e.g. Chanda Mulenga')}
-                    className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                   />
                 </div>
               )}
@@ -670,7 +773,7 @@ export const Navbar: React.FC = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@example.com"
-                  className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
                 />
               </div>
 
@@ -689,7 +792,7 @@ export const Navbar: React.FC = () => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder={authMode === 'register' ? translate('Create password (min 4 chars)', 'Pangeni password') : '••••••••'}
-                    className="w-full pl-3 pr-10 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                    className="w-full pl-3.5 pr-10 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
                   />
                   <button
                     type="button"
@@ -751,7 +854,7 @@ export const Navbar: React.FC = () => {
                       value={adminPin}
                       onChange={(e) => setAdminPin(e.target.value)}
                       placeholder={translate('Enter 6-digit Master PIN (e.g. 260966)', 'Lembeni 6-digit PIN')}
-                      className="w-full pl-3 pr-10 py-2 rounded-lg bg-slate-900 border border-orange-500/60 text-white font-mono text-sm tracking-widest focus:outline-none focus:ring-2 focus:ring-orange-500"
+                      className="w-full pl-3.5 pr-10 py-2.5 rounded-xl bg-slate-900 border border-orange-500/60 text-white font-mono text-base sm:text-sm tracking-widest focus:outline-none focus:ring-2 focus:ring-orange-500"
                     />
                     <button
                       type="button"
@@ -820,7 +923,7 @@ export const Navbar: React.FC = () => {
                         value={adminSecretKey}
                         onChange={(e) => setAdminSecretKey(e.target.value)}
                         placeholder={translate('Enter Admin Master PIN / Authorization Key', 'Lembeni Security Key')}
-                        className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-orange-500/60 text-white font-mono text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-orange-500/60 text-white font-mono text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
                       />
                       <p className="text-[10px] text-slate-300">
                         {translate(

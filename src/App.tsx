@@ -10,6 +10,7 @@ import { AboutSection } from './components/AboutSection';
 import { ContactSection } from './components/ContactSection';
 import { AdminSection } from './components/AdminSection';
 import { OfflineBanner } from './components/OfflineBanner';
+import { MobileBottomNav } from './components/MobileBottomNav';
 import { Shield, Eye, Smartphone, Mail, Phone, ExternalLink } from 'lucide-react';
 
 const MainAppContent: React.FC = () => {
@@ -60,9 +61,15 @@ const MainAppContent: React.FC = () => {
       <OfflineBanner />
 
       {/* Main Container */}
-      <main className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+      <main className="flex-grow max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-5 sm:py-8 pb-24 md:pb-8 w-full">
         {renderSection()}
       </main>
+
+      {/* Mobile Sticky Bottom Navigation Dock */}
+      <MobileBottomNav onOpenMoreMenu={() => {
+        const btn = document.getElementById('mobile-menu-btn');
+        if (btn) btn.click();
+      }} />
 
       {/* Footer */}
       <footer className={`border-t transition-all duration-300 py-10 text-left ${

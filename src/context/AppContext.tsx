@@ -47,6 +47,8 @@ interface AppContextType {
   setHighContrast: (val: boolean) => void;
   activeSection: string;
   setActiveSection: (sec: string) => void;
+  selectedVideoId: string | null;
+  setSelectedVideoId: (id: string | null) => void;
 
   // Auth
   user: LocalUser | null;
@@ -71,6 +73,7 @@ interface AppContextType {
   auditLogs: AuditLog[];
   notifications: NotificationItem[];
   addVideo: (video: Omit<VideoContent, 'id' | 'views' | 'downloads' | 'createdAt'>) => Promise<void>;
+  updateVideo: (id: string, updates: Partial<VideoContent>) => Promise<void>;
   deleteVideo: (id: string) => Promise<void>;
   addImage: (image: Omit<ImageContent, 'id' | 'views' | 'downloads' | 'createdAt'>) => Promise<void>;
   addPdf: (pdf: Omit<PDFMaterial, 'id' | 'downloads' | 'createdAt'>) => Promise<void>;
@@ -92,6 +95,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [textSize, setTextSize] = useState<'normal' | 'large'>('normal');
   const [highContrast, setHighContrast] = useState<boolean>(false);
   const [activeSection, setActiveSection] = useState<string>('home');
+  const [selectedVideoId, setSelectedVideoId] = useState<string | null>(null);
 
   const [user, setUser] = useState<LocalUser | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -105,14 +109,31 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (local) {
         const parsed = JSON.parse(local) as VideoContent[];
         const merged = [...parsed];
+        let migrated = false;
         SAMPLE_VIDEOS.forEach(sample => {
           const idx = merged.findIndex(v => v.id === sample.id);
           if (idx === -1) {
             merged.push(sample);
+            migrated = true;
           } else {
-            merged[idx] = { ...sample, ...merged[idx] };
+            // If the sample video has a YouTube URL and the stored item still has an old Facebook URL or missing thumbnail, migrate it
+            if (
+              merged[idx].url.includes('facebook.com/reel/1398945024917902') ||
+              merged[idx].url.includes('facebook.com/reel/1433376975358331') ||
+              (sample.url.includes('youtu') && merged[idx].url.includes('facebook.com'))
+            ) {
+              merged[idx] = { ...merged[idx], url: sample.url, thumbnailUrl: sample.thumbnailUrl };
+              migrated = true;
+            } else {
+              merged[idx] = { ...sample, ...merged[idx] };
+            }
           }
         });
+        if (migrated) {
+          try {
+            localStorage.setItem('cyber_academy_custom_videos', JSON.stringify(merged));
+          } catch (_) {}
+        }
         return merged;
       }
       return SAMPLE_VIDEOS;
@@ -903,6 +924,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
+  const updateVideo = async (id: string, updates: Partial<VideoContent>) => {
+    setVideos(prev => {
+      const updated = prev.map(v => v.id === id ? { ...v, ...updates } : v);
+      localStorage.setItem('cyber_academy_custom_videos', JSON.stringify(updated));
+      return updated;
+    });
+    const targetVid = videos.find(v => v.id === id);
+    await logActivity('Update Video', `Updated video ID: ${id} (${targetVid?.title_en || 'unknown'})`);
+
+    try {
+      if (db) {
+        await setDoc(doc(db, 'videos', id), updates, { merge: true });
+      }
+    } catch (e) {
+      console.warn('Could not update video in Firestore:', e);
+    }
+  };
+
   const deleteVideo = async (id: string) => {
     const deleted = videos.find(v => v.id === id);
     setVideos(prev => {
@@ -1109,11 +1148,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       textSize, setTextSize,
       highContrast, setHighContrast,
       activeSection, setActiveSection,
+      selectedVideoId, setSelectedVideoId,
       user, profile, loadingAuth, errorMsg, setErrorMsg,
       login, register, logout, resetPassword, quickLogin,
       getAdminPin, updateAdminPin,
       videos, images, pdfs, quizzes, attempts, auditLogs, notifications,
-      addVideo, deleteVideo, addImage, addPdf, deletePdf, addQuiz, deleteQuiz, addQuizAttempt, logActivity, addNotification,
+      addVideo, updateVideo, deleteVideo, addImage, addPdf, deletePdf, addQuiz, deleteQuiz, addQuizAttempt, logActivity, addNotification,
       translate
     }}>
       {children}

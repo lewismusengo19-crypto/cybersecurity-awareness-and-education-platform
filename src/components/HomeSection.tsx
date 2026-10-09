@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { speechService } from '../utils/speechService';
-import { Shield, Play, HelpCircle, Award, CheckCircle, Smartphone, AlertTriangle, ArrowRight, Volume2, VolumeX, Pause, Sparkles, RefreshCw, Image as ImageIcon } from 'lucide-react';
+import { Shield, Play, HelpCircle, Award, CheckCircle, Smartphone, AlertTriangle, ArrowRight, Volume2, VolumeX, Pause, Sparkles, RefreshCw, Image as ImageIcon, Youtube } from 'lucide-react';
+import { isYouTubeUrl } from '../utils/videoUtils';
 
 export const HomeSection: React.FC = () => {
   const {
     language,
     activeSection,
     setActiveSection,
+    setSelectedVideoId,
     videos,
     images,
     quizzes,
@@ -89,38 +91,38 @@ export const HomeSection: React.FC = () => {
   return (
     <div className="space-y-12 animate-fade-in" id="home-section">
       {/* HERO SECTION */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-950 text-white rounded-3xl p-8 sm:p-12 border border-slate-800 shadow-2xl">
+      <div className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-950 text-white rounded-3xl p-5 sm:p-10 border border-slate-800 shadow-2xl">
         {/* Zambia colors background flare */}
         <div className="absolute right-0 top-0 h-64 w-64 bg-green-500/10 blur-3xl rounded-full"></div>
         <div className="absolute left-1/3 bottom-0 h-64 w-64 bg-orange-500/5 blur-3xl rounded-full"></div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center relative z-10">
           {/* Hero text */}
-          <div className="lg:col-span-7 space-y-6 text-left">
+          <div className="lg:col-span-7 space-y-5 sm:space-y-6 text-left">
             <div className="inline-flex items-center space-x-2 bg-green-500/10 border border-green-500/30 text-green-400 px-3 py-1.5 rounded-full text-xs font-mono">
               <Shield className="h-3.5 w-3.5" />
               <span>{translate('ZAMBIAN CYBERSECURITY INITIATIVE', ' UKUICINGILILA UKWAPA INTANETI MU ZAMBIA')}</span>
             </div>
 
-            <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight leading-tight">
+            <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight leading-tight">
               {translate(
                 'Protect Your Identity and Money in the Digital World',
                 'Cingilileni Indalama Shenu'
               )}
             </h1>
 
-            <p className="text-slate-300 text-base sm:text-lg max-w-xl leading-relaxed">
+            <p className="text-slate-300 text-sm sm:text-lg max-w-xl leading-relaxed">
               {translate(
                 'Learn how to identify mobile money scams, prevent social media hacks, and safeguard your family. Structured lessons available in both English and Bemba.',
                 'Sambilileni ifyo mwingeshiba ilyashi ilya bufi, ifyakuicingilila pa WhatsApp napa Facebook, no kuchenjela kuli bamapulamafunde. Ifisambilisho fili mu Cingeleshi na mu Cibemba.'
               )}
             </p>
 
-            <div className="flex flex-wrap gap-4 pt-2">
+            <div className="flex flex-col sm:flex-row gap-3 pt-2 w-full sm:w-auto">
               <button
                 id="hero-start-learning-btn"
                 onClick={() => setActiveSection('learn')}
-                className="px-6 py-3 bg-green-600 hover:bg-green-500 text-white font-bold rounded-xl flex items-center space-x-2 transition-all shadow cursor-pointer transform hover:-translate-y-0.5"
+                className="w-full sm:w-auto px-6 py-3.5 bg-green-600 hover:bg-green-500 text-white font-bold rounded-xl flex items-center justify-center space-x-2 transition-all shadow cursor-pointer active:scale-95"
               >
                 <span>{translate('Start Learning Now', 'Ambeni Ukusambilila')}</span>
                 <ArrowRight className="h-4 w-4" />
@@ -129,7 +131,7 @@ export const HomeSection: React.FC = () => {
               <button
                 id="hero-chatbot-btn"
                 onClick={() => setActiveSection('chatbot')}
-                className="px-6 py-3 bg-slate-800 border border-slate-700 hover:bg-slate-700 text-white font-bold rounded-xl flex items-center space-x-2 transition-all cursor-pointer"
+                className="w-full sm:w-auto px-6 py-3.5 bg-slate-800 border border-slate-700 hover:bg-slate-700 text-white font-bold rounded-xl flex items-center justify-center space-x-2 transition-all cursor-pointer active:scale-95"
               >
                 <span>{translate('Talk to Ba Cyber Advisor', 'Lanshanyeni naba Cyber Advisor')}</span>
               </button>
@@ -390,13 +392,30 @@ export const HomeSection: React.FC = () => {
                     alt={translate(video.title_en, video.title_bm)}
                     className="w-full h-full object-cover"
                   />
-                  {video.url.includes('facebook.com') && (
+                  {isYouTubeUrl(video.url) ? (
+                    <div className="absolute top-2 left-2 px-2 py-0.5 bg-red-600 text-white text-[10px] font-bold rounded-md shadow flex items-center space-x-1 z-10">
+                      <Youtube className="h-3 w-3" />
+                      <span>YouTube</span>
+                    </div>
+                  ) : video.url.includes('facebook.com') ? (
                     <div className="absolute top-2 left-2 px-2 py-0.5 bg-[#1877F2] text-white text-[10px] font-bold rounded-md shadow flex items-center space-x-1 z-10">
                       <span>Facebook Reel</span>
                     </div>
-                  )}
+                  ) : null}
                   <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-80 hover:opacity-100 transition-opacity">
-                    {video.url.includes('facebook.com') ? (
+                    {isYouTubeUrl(video.url) ? (
+                      <button
+                        id={`play-home-vid-${video.id}`}
+                        onClick={() => {
+                          setSelectedVideoId(video.id);
+                          setActiveSection('learn');
+                        }}
+                        className="p-3 bg-red-600 hover:bg-red-500 rounded-full text-white shadow-lg cursor-pointer transform hover:scale-110 transition-transform flex items-center justify-center"
+                        title={translate('Watch on Academy Player', 'Tambeni muli Academy Player')}
+                      >
+                        <Play className="h-6 w-6 fill-current ml-0.5" />
+                      </button>
+                    ) : video.url.includes('facebook.com') ? (
                       <a
                         id={`play-home-vid-${video.id}`}
                         href={video.url}
@@ -410,7 +429,10 @@ export const HomeSection: React.FC = () => {
                     ) : (
                       <button
                         id={`play-home-vid-${video.id}`}
-                        onClick={() => setActiveSection('learn')}
+                        onClick={() => {
+                          setSelectedVideoId(video.id);
+                          setActiveSection('learn');
+                        }}
                         className="p-3 bg-green-600 rounded-full text-white shadow-lg cursor-pointer transform hover:scale-105 transition-transform"
                       >
                         <Play className="h-6 w-6 fill-current" />
@@ -428,7 +450,30 @@ export const HomeSection: React.FC = () => {
                   <p className="text-xs text-slate-400 line-clamp-2">
                     {translate(video.description_en, video.description_bm)}
                   </p>
-                  {video.url.includes('facebook.com') && (
+                  {isYouTubeUrl(video.url) ? (
+                    <div className="pt-1 flex items-center justify-between">
+                      <button
+                        onClick={() => {
+                          setSelectedVideoId(video.id);
+                          setActiveSection('learn');
+                        }}
+                        className="text-xs font-semibold text-red-400 hover:text-red-300 flex items-center space-x-1 cursor-pointer"
+                      >
+                        <span>{translate('Stream Video Lesson', 'Tambeni Isambililo')}</span>
+                        <ArrowRight className="h-3 w-3" />
+                      </button>
+                      <a
+                        href={video.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[11px] text-slate-400 hover:text-white flex items-center space-x-0.5"
+                        title={translate('Open on YouTube', 'Isula pali YouTube')}
+                      >
+                        <span>YouTube</span>
+                        <ArrowRight className="h-2.5 w-2.5" />
+                      </a>
+                    </div>
+                  ) : video.url.includes('facebook.com') ? (
                     <div className="pt-1">
                       <a
                         href={video.url}
@@ -440,7 +485,7 @@ export const HomeSection: React.FC = () => {
                         <ArrowRight className="h-3 w-3" />
                       </a>
                     </div>
-                  )}
+                  ) : null}
                 </div>
               </div>
             ))}

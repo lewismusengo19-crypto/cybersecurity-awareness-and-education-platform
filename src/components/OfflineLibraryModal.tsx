@@ -32,7 +32,7 @@ export const OfflineLibraryModal: React.FC<OfflineLibraryModalProps> = ({
   onSelectImage,
   onSelectQuiz
 }) => {
-  const { videos, images, pdfs, quizzes, translate, setActiveSection } = useApp();
+  const { videos, images, pdfs, quizzes, translate, setActiveSection, setSelectedVideoId } = useApp();
   const {
     isOnline,
     cachedItems,
@@ -68,6 +68,7 @@ export const OfflineLibraryModal: React.FC<OfflineLibraryModalProps> = ({
 
   const handleOpenItem = (item: any) => {
     if (item.type === 'video') {
+      setSelectedVideoId(item.id);
       setActiveSection('learn');
       if (onSelectVideo) onSelectVideo(item.id);
     } else if (item.type === 'image') {
@@ -83,10 +84,10 @@ export const OfflineLibraryModal: React.FC<OfflineLibraryModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fade-in text-left">
-      <div className="w-full max-w-2xl bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-3 sm:p-4 animate-fade-in text-left">
+      <div className="w-full max-w-2xl bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
         {/* Header */}
-        <div className="p-5 border-b border-slate-800 flex items-center justify-between bg-slate-950/70">
+        <div className="p-4 sm:p-5 border-b border-slate-800 flex items-center justify-between bg-slate-950/70">
           <div className="flex items-center space-x-3">
             <div className={`p-2 rounded-xl border ${
               isOnline 

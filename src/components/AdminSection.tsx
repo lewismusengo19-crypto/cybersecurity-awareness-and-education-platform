@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { Shield, Upload, FilePlus, AlertOctagon, Users, BarChart2, CheckCircle, Trash2, Heart, Plus, BookOpen, AlertCircle, RefreshCw, LogOut, Lock, Key, Check, Eye, EyeOff, ShieldCheck, CheckCircle2 } from 'lucide-react';
+import { Shield, Upload, FilePlus, AlertOctagon, Users, BarChart2, CheckCircle, Trash2, Heart, Plus, BookOpen, AlertCircle, RefreshCw, LogOut, Lock, Key, Check, Eye, EyeOff, ShieldCheck, CheckCircle2, Youtube, Edit3, ExternalLink } from 'lucide-react';
 import { QuizQuestion } from '../types';
+import { isYouTubeUrl, getYouTubeVideoId, getYouTubeThumbnail } from '../utils/videoUtils';
 
 export const AdminSection: React.FC = () => {
   const {
@@ -13,6 +14,7 @@ export const AdminSection: React.FC = () => {
     attempts,
     auditLogs,
     addVideo,
+    updateVideo,
     deleteVideo,
     addImage,
     addPdf,
@@ -79,6 +81,13 @@ export const AdminSection: React.FC = () => {
   const [descBm, setDescBm] = useState('');
   const [duration, setDuration] = useState('04:30'); // default for video
   const [thumbUrl, setThumbUrl] = useState('https://images.unsplash.com/photo-1563013544-824ae1d704d3?auto=format&fit=crop&w=600&q=80');
+
+  // YouTube and video source management
+  const [videoSourceMode, setVideoSourceMode] = useState<'youtube' | 'upload'>('youtube');
+  const [youtubeInputUrl, setYoutubeInputUrl] = useState('');
+  const [editingVideoId, setEditingVideoId] = useState<string | null>(null);
+  const [editVideoUrlInput, setEditVideoUrlInput] = useState('');
+  const [editSuccessMsg, setEditSuccessMsg] = useState<string | null>(null);
 
   // Quiz creator state
   const [quizTitleEn, setQuizTitleEn] = useState('');
@@ -275,8 +284,8 @@ export const AdminSection: React.FC = () => {
         </div>
 
         {/* Tab Switcher & Logout */}
-        <div className="flex items-center space-x-2">
-          <div className="flex bg-slate-900 border border-slate-800 rounded-xl p-1 overflow-x-auto">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full md:w-auto">
+          <div className="flex bg-slate-900 border border-slate-800 rounded-xl p-1 overflow-x-auto no-scrollbar flex-nowrap w-full sm:w-auto">
             {[
               { id: 'stats', label: translate('Overview', 'Mone Yonse') },
               { id: 'upload', label: translate('Media Upload', 'Fyatani Media') },
@@ -289,7 +298,7 @@ export const AdminSection: React.FC = () => {
                 key={tab.id}
                 id={`admin-tab-${tab.id}`}
                 onClick={() => setActiveTab(tab.id as any)}
-                className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+                className={`px-3 py-2 sm:px-3.5 sm:py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
                   activeTab === tab.id
                     ? 'bg-orange-500 text-white shadow'
                     : 'text-slate-400 hover:text-white'
@@ -306,11 +315,11 @@ export const AdminSection: React.FC = () => {
               e.preventDefault();
               await logout();
             }}
-            className="flex items-center space-x-1.5 px-3 py-2 rounded-xl border border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 text-xs font-bold cursor-pointer transition-all shrink-0"
+            className="flex items-center justify-center space-x-1.5 px-3 py-2 rounded-xl border border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 text-xs font-bold cursor-pointer transition-all shrink-0 min-h-[38px]"
             title={translate('Sign Out', 'Ukufumamo')}
           >
             <LogOut className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">{translate('Sign Out', 'Fumamo')}</span>
+            <span>{translate('Sign Out', 'Fumamo')}</span>
           </button>
         </div>
       </div>
@@ -413,202 +422,415 @@ export const AdminSection: React.FC = () => {
 
       {/* TAB 2: MEDIA FILE UPLOADER */}
       {activeTab === 'upload' && (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          {/* File input form */}
-          <div className="lg:col-span-6 bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl">
-            <h3 className="font-bold text-lg text-white mb-4 flex items-center space-x-2">
-              <Upload className="h-5 w-5 text-orange-500" />
-              <span>{translate('Binary File Uploader', 'Fyatani ifisambilisho')}</span>
-            </h3>
+        <div className="space-y-8">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            {/* File input form or YouTube Link Provider */}
+            <div className="lg:col-span-6 bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl">
+              <h3 className="font-bold text-lg text-white mb-4 flex items-center space-x-2">
+                <Upload className="h-5 w-5 text-orange-500" />
+                <span>{translate('Binary & Link Content Uploader', 'Fyatani ifisambilisho')}</span>
+              </h3>
 
-            <form onSubmit={handleFileUpload} className="space-y-4 text-left">
-              <div>
-                <label className="block text-xs font-medium uppercase tracking-wider text-slate-400 mb-1">
-                  {translate('Content Target', 'Ifilolenako')}
-                </label>
-                <div className="grid grid-cols-3 gap-2">
-                  {[
-                    { id: 'video', label: 'Video (MP4)' },
-                    { id: 'image', label: 'Infographic' },
-                    { id: 'pdf', label: 'PDF Book' }
-                  ].map((t) => (
+              <div className="space-y-4 text-left">
+                <div>
+                  <label className="block text-xs font-medium uppercase tracking-wider text-slate-400 mb-1">
+                    {translate('Content Target', 'Ifilolenako')}
+                  </label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      { id: 'video', label: 'Video (YouTube/MP4)' },
+                      { id: 'image', label: 'Infographic' },
+                      { id: 'pdf', label: 'PDF Book' }
+                    ].map((t) => (
+                      <button
+                        key={t.id}
+                        type="button"
+                        onClick={() => {
+                          setUploadType(t.id as any);
+                          if (t.id !== 'video') setVideoSourceMode('upload');
+                        }}
+                        className={`py-2 px-3 text-xs rounded-lg font-bold border cursor-pointer text-center transition-all ${
+                          uploadType === t.id
+                            ? 'bg-orange-500 border-orange-500 text-white'
+                            : 'border-slate-700 text-slate-400 hover:bg-slate-800'
+                        }`}
+                      >
+                        {t.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {uploadType === 'video' && (
+                  <div>
+                    <label className="block text-xs font-medium uppercase tracking-wider text-slate-400 mb-1">
+                      {translate('Video Source Mode', 'Inshila ya Vidio')}
+                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setVideoSourceMode('youtube')}
+                        className={`py-2 px-3 text-xs rounded-lg font-bold border cursor-pointer flex items-center justify-center space-x-1.5 transition-all ${
+                          videoSourceMode === 'youtube'
+                            ? 'bg-red-600 border-red-600 text-white'
+                            : 'border-slate-700 text-slate-400 hover:bg-slate-800'
+                        }`}
+                      >
+                        <Youtube className="h-3.5 w-3.5" />
+                        <span>{translate('YouTube Link', 'Link ya YouTube')}</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setVideoSourceMode('upload')}
+                        className={`py-2 px-3 text-xs rounded-lg font-bold border cursor-pointer flex items-center justify-center space-x-1.5 transition-all ${
+                          videoSourceMode === 'upload'
+                            ? 'bg-orange-500 border-orange-500 text-white'
+                            : 'border-slate-700 text-slate-400 hover:bg-slate-800'
+                        }`}
+                      >
+                        <Upload className="h-3.5 w-3.5" />
+                        <span>{translate('Upload MP4 File', 'Tuma MP4 File')}</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {uploadType === 'video' && videoSourceMode === 'youtube' ? (
+                  <div className="p-4 bg-slate-950 border border-slate-800 rounded-xl space-y-3">
+                    <label className="block text-xs font-bold text-slate-300">
+                      {translate('Enter YouTube Video URL', 'Lembani YouTube Video URL')}
+                    </label>
+                    <input
+                      id="admin-youtube-input"
+                      type="url"
+                      placeholder="https://www.youtube.com/watch?v=... or https://youtu.be/..."
+                      value={youtubeInputUrl}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setYoutubeInputUrl(val);
+                        setUploadedPath(val.trim());
+                        const ytThumb = getYouTubeThumbnail(val.trim());
+                        if (ytThumb) setThumbUrl(ytThumb);
+                      }}
+                      className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs font-mono focus:outline-none focus:ring-2 focus:ring-red-500"
+                    />
+
+                    {youtubeInputUrl && isYouTubeUrl(youtubeInputUrl) && (
+                      <div className="p-2.5 bg-green-500/10 border border-green-500/25 rounded-lg flex items-center space-x-2 text-xs text-green-300">
+                        <Check className="h-4 w-4 text-green-400 shrink-0" />
+                        <span>
+                          {translate(
+                            `YouTube URL recognized (ID: ${getYouTubeVideoId(youtubeInputUrl)}). Thumbnail and streaming path configured!`,
+                            `Link ya YouTube yasuminshiwa bwino!`
+                          )}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <form onSubmit={handleFileUpload} className="space-y-4">
+                    <div className="border-2 border-dashed border-slate-700 hover:border-slate-500 rounded-xl p-8 text-center space-y-2 relative transition-all">
+                      <input
+                        id="admin-file-picker"
+                        type="file"
+                        required
+                        onChange={(e) => {
+                          if (e.target.files) setSelectedFile(e.target.files[0]);
+                        }}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                      />
+                      <Upload className="h-10 w-10 text-slate-500 mx-auto" />
+                      <p className="text-xs text-white font-bold">
+                        {selectedFile ? selectedFile.name : translate('Drag & drop or click to select', 'Cisendeni noku cileta nangula tinikenife')}
+                      </p>
+                      <p className="text-[10px] text-slate-400 uppercase font-mono">
+                        {uploadType === 'video' ? 'MP4 max 100MB' : uploadType === 'image' ? 'JPEG/PNG/WEBP max 5MB' : 'PDF max 20MB'}
+                      </p>
+                    </div>
+
                     <button
-                      key={t.id}
-                      type="button"
-                      onClick={() => setUploadType(t.id as any)}
-                      className={`py-2 px-3 text-xs rounded-lg font-bold border cursor-pointer text-center transition-all ${
-                        uploadType === t.id
-                          ? 'bg-orange-500 border-orange-500 text-white'
-                          : 'border-slate-700 text-slate-400 hover:bg-slate-800'
+                      id="admin-upload-submit"
+                      type="submit"
+                      disabled={!selectedFile || uploading}
+                      className={`w-full py-2 rounded-lg font-bold text-xs cursor-pointer flex items-center justify-center space-x-2 transition-all ${
+                        !selectedFile || uploading
+                          ? 'bg-slate-800 text-slate-500 cursor-not-allowed'
+                          : 'bg-green-600 hover:bg-green-500 text-white'
                       }`}
                     >
-                      {t.label}
+                      <span>{uploading ? translate('Uploading File...', 'File Eletwalikwa...') : translate('Upload to Server Directory', 'Twaleni ku server')}</span>
                     </button>
-                  ))}
-                </div>
+                  </form>
+                )}
               </div>
+            </div>
 
-              <div className="border-2 border-dashed border-slate-700 hover:border-slate-500 rounded-xl p-8 text-center space-y-2 relative transition-all">
-                <input
-                  id="admin-file-picker"
-                  type="file"
-                  required
-                  onChange={(e) => {
-                    if (e.target.files) setSelectedFile(e.target.files[0]);
-                  }}
-                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                />
-                <Upload className="h-10 w-10 text-slate-500 mx-auto" />
-                <p className="text-xs text-white font-bold">
-                  {selectedFile ? selectedFile.name : translate('Drag & drop or click to select', 'Cisendeni noku cileta nangula tinikenife')}
-                </p>
-                <p className="text-[10px] text-slate-400 uppercase font-mono">
-                  {uploadType === 'video' ? 'MP4 max 100MB' : uploadType === 'image' ? 'JPEG/PNG/WEBP max 5MB' : 'PDF max 20MB'}
-                </p>
-              </div>
+            {/* Metadata information details */}
+            <div className="lg:col-span-6 bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl">
+              <h3 className="font-bold text-lg text-white mb-4 flex items-center space-x-2">
+                <FilePlus className="h-5 w-5 text-orange-500" />
+                <span>{translate('Metadata Registration', 'Amalembelo ya Metadata')}</span>
+              </h3>
 
-              <button
-                id="admin-upload-submit"
-                type="submit"
-                disabled={!selectedFile || uploading}
-                className={`w-full py-2 rounded-lg font-bold text-xs cursor-pointer flex items-center justify-center space-x-2 transition-all ${
-                  !selectedFile || uploading
-                    ? 'bg-slate-800 text-slate-500 cursor-not-allowed'
-                    : 'bg-green-600 hover:bg-green-500 text-white'
-                }`}
-              >
-                <span>{uploading ? translate('Uploading File...', 'File Eletwalikwa...') : translate('Upload to Server Directory', 'Twaleni ku server')}</span>
-              </button>
-            </form>
-          </div>
-
-          {/* Metadata information details */}
-          <div className="lg:col-span-6 bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl">
-            <h3 className="font-bold text-lg text-white mb-4 flex items-center space-x-2">
-              <FilePlus className="h-5 w-5 text-orange-500" />
-              <span>{translate('Metadata Registration', 'Amalembelo ya Metadata')}</span>
-            </h3>
-
-            <form onSubmit={saveMediaMetadata} className="space-y-4 text-left">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-medium uppercase tracking-wider text-slate-400 mb-1">
-                    {translate('English Title', 'Ishina lya Cingeleshi')}
-                  </label>
-                  <input
-                    id="meta-title-en"
-                    type="text"
-                    required
-                    value={titleEn}
-                    onChange={(e) => setTitleEn(e.target.value)}
-                    placeholder="Mobile Money Safety rules"
-                    className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white text-xs focus:outline-none focus:ring-2 focus:ring-orange-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium uppercase tracking-wider text-slate-400 mb-1">
-                    {translate('Bemba Title', 'Ishina lya Cibemba')}
-                  </label>
-                  <input
-                    id="meta-title-bm"
-                    type="text"
-                    required
-                    value={titleBm}
-                    onChange={(e) => setTitleBm(e.target.value)}
-                    placeholder="Ifunde lya kusunga Mobile Money"
-                    className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white text-xs focus:outline-none focus:ring-2 focus:ring-orange-500"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-medium uppercase tracking-wider text-slate-400 mb-1">
-                    {translate('English Description', 'Ifyakulondolola mu Cingeleshi')}
-                  </label>
-                  <textarea
-                    id="meta-desc-en"
-                    rows={3}
-                    required
-                    value={descEn}
-                    onChange={(e) => setDescEn(e.target.value)}
-                    placeholder="Learn key safety rules..."
-                    className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white text-xs focus:outline-none"
-                  ></textarea>
-                </div>
-                <div>
-                  <label className="block text-xs font-medium uppercase tracking-wider text-slate-400 mb-1">
-                    {translate('Bemba Description', 'Ifyakulondolola mu Cibemba')}
-                  </label>
-                  <textarea
-                    id="meta-desc-bm"
-                    rows={3}
-                    required
-                    value={descBm}
-                    onChange={(e) => setDescBm(e.target.value)}
-                    placeholder="Sambilileni ama funde Yakalamba..."
-                    className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white text-xs focus:outline-none"
-                  ></textarea>
-                </div>
-              </div>
-
-              {uploadType === 'video' && (
+              <form onSubmit={saveMediaMetadata} className="space-y-4 text-left">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-medium uppercase tracking-wider text-slate-400 mb-1">
-                      {translate('Video Duration', 'Nshita')}
+                      {translate('English Title', 'Ishina lya Cingeleshi')}
                     </label>
                     <input
-                      id="meta-duration"
+                      id="meta-title-en"
                       type="text"
-                      value={duration}
-                      onChange={(e) => setDuration(e.target.value)}
-                      placeholder="03:45"
-                      className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white text-xs"
+                      required
+                      value={titleEn}
+                      onChange={(e) => setTitleEn(e.target.value)}
+                      placeholder="Mobile Money Safety rules"
+                      className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white text-xs focus:outline-none focus:ring-2 focus:ring-orange-500"
                     />
                   </div>
                   <div>
                     <label className="block text-xs font-medium uppercase tracking-wider text-slate-400 mb-1">
-                      {translate('Thumbnail Image URL', 'Thumbnail Image URL')}
+                      {translate('Bemba Title', 'Ishina lya Cibemba')}
                     </label>
                     <input
-                      id="meta-thumbnail"
+                      id="meta-title-bm"
                       type="text"
-                      value={thumbUrl}
-                      onChange={(e) => setThumbUrl(e.target.value)}
-                      className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white text-xs"
+                      required
+                      value={titleBm}
+                      onChange={(e) => setTitleBm(e.target.value)}
+                      placeholder="Ifunde lya kusunga Mobile Money"
+                      className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white text-xs focus:outline-none focus:ring-2 focus:ring-orange-500"
                     />
                   </div>
                 </div>
-              )}
 
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-medium uppercase tracking-wider text-slate-400 mb-1">
+                      {translate('English Description', 'Ifyakulondolola mu Cingeleshi')}
+                    </label>
+                    <textarea
+                      id="meta-desc-en"
+                      rows={3}
+                      required
+                      value={descEn}
+                      onChange={(e) => setDescEn(e.target.value)}
+                      placeholder="Learn key safety rules..."
+                      className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white text-xs focus:outline-none"
+                    ></textarea>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium uppercase tracking-wider text-slate-400 mb-1">
+                      {translate('Bemba Description', 'Ifyakulondolola mu Cibemba')}
+                    </label>
+                    <textarea
+                      id="meta-desc-bm"
+                      rows={3}
+                      required
+                      value={descBm}
+                      onChange={(e) => setDescBm(e.target.value)}
+                      placeholder="Sambilileni ama funde Yakalamba..."
+                      className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white text-xs focus:outline-none"
+                    ></textarea>
+                  </div>
+                </div>
+
+                {uploadType === 'video' && (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-medium uppercase tracking-wider text-slate-400 mb-1">
+                        {translate('Video Duration', 'Nshita')}
+                      </label>
+                      <input
+                        id="meta-duration"
+                        type="text"
+                        value={duration}
+                        onChange={(e) => setDuration(e.target.value)}
+                        placeholder="03:45"
+                        className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white text-xs"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium uppercase tracking-wider text-slate-400 mb-1">
+                        {translate('Thumbnail Image URL', 'Thumbnail Image URL')}
+                      </label>
+                      <input
+                        id="meta-thumbnail"
+                        type="text"
+                        value={thumbUrl}
+                        onChange={(e) => setThumbUrl(e.target.value)}
+                        className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white text-xs"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                <div>
+                  <label className="block text-xs font-medium uppercase tracking-wider text-slate-400 mb-1">
+                    {translate('Video / File Location URL or Path', 'Ukuli File')}
+                  </label>
+                  <input
+                    id="meta-path-display"
+                    type="text"
+                    required
+                    placeholder="https://www.youtube.com/watch?v=... or /uploads/..."
+                    value={uploadedPath}
+                    onChange={(e) => setUploadedPath(e.target.value)}
+                    className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white text-xs font-mono select-all focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  />
+                </div>
+
+                <button
+                  id="meta-save-submit"
+                  type="submit"
+                  disabled={!uploadedPath}
+                  className={`w-full py-2.5 rounded-lg font-bold text-xs cursor-pointer shadow transition-all ${
+                    !uploadedPath
+                      ? 'bg-slate-800 text-slate-500 cursor-not-allowed'
+                      : 'bg-orange-500 hover:bg-orange-600 text-white'
+                  }`}
+                >
+                  {translate('Save Media and Deploy', 'Sungeni noku Twala')}
+                </button>
+              </form>
+            </div>
+          </div>
+
+          {/* Manage Existing Video Lessons and YouTube Links */}
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4 text-left">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-3">
               <div>
-                <label className="block text-xs font-medium uppercase tracking-wider text-slate-400 mb-1">
-                  {translate('File Binary Location Path', 'Ukuli File')}
-                </label>
-                <input
-                  id="meta-path-display"
-                  type="text"
-                  readOnly
-                  placeholder="/uploads/videos/some_file.mp4"
-                  value={uploadedPath}
-                  className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-850 text-slate-400 text-xs font-mono select-all focus:outline-none"
-                />
+                <h3 className="font-bold text-base text-white flex items-center space-x-2">
+                  <Youtube className="h-5 w-5 text-red-500" />
+                  <span>{translate('Manage Video Lessons & YouTube Links', 'Sungani Amavidio ne ma Links ya YouTube')}</span>
+                </h3>
+                <p className="text-xs text-slate-400">
+                  {translate(
+                    'Directly update or switch any video lesson to a YouTube link, or remove outdated content.',
+                    'Kutimwacinja vidio iyili yonse ukuya kuli YouTube link nangu ukufumyapo.'
+                  )}
+                </p>
               </div>
+              <span className="text-xs font-mono text-slate-400 bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-800">
+                {videos.length} {translate('lessons total', 'amavidio yonse')}
+              </span>
+            </div>
 
-              <button
-                id="meta-save-submit"
-                type="submit"
-                disabled={!uploadedPath}
-                className={`w-full py-2.5 rounded-lg font-bold text-xs cursor-pointer shadow transition-all ${
-                  !uploadedPath
-                    ? 'bg-slate-800 text-slate-500 cursor-not-allowed'
-                    : 'bg-orange-500 hover:bg-orange-600 text-white'
-                }`}
-              >
-                {translate('Save Media and Deploy', 'Sungeni noku Twala')}
-              </button>
-            </form>
+            {editSuccessMsg && (
+              <div className="p-3 bg-green-500/10 border border-green-500/30 rounded-xl text-green-400 text-xs flex items-center space-x-2">
+                <Check className="h-4 w-4" />
+                <span>{editSuccessMsg}</span>
+              </div>
+            )}
+
+            <div className="space-y-3">
+              {videos.map((vid) => (
+                <div
+                  key={vid.id}
+                  className="p-4 bg-slate-950/70 border border-slate-800 rounded-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4 group hover:border-slate-700 transition"
+                >
+                  <div className="flex items-center space-x-3 min-w-0 flex-1">
+                    <div className="relative w-20 aspect-video rounded-lg overflow-hidden bg-black shrink-0">
+                      <img src={vid.thumbnailUrl} alt="" className="w-full h-full object-cover" />
+                      {isYouTubeUrl(vid.url) && (
+                        <div className="absolute top-1 left-1 bg-red-600 text-white px-1 py-0.2 rounded text-[7px] font-bold">
+                          YouTube
+                        </div>
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <h4 className="text-sm font-bold text-white truncate">
+                        {translate(vid.title_en, vid.title_bm)}
+                      </h4>
+                      <p className="text-[11px] text-slate-400 font-mono truncate mt-0.5">
+                        URL: {vid.url}
+                      </p>
+                      <div className="flex items-center space-x-3 text-[10px] text-slate-500 font-mono mt-1">
+                        <span>{vid.duration}</span>
+                        <span>•</span>
+                        <span>{vid.views} views</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {editingVideoId === vid.id ? (
+                    <div className="w-full md:w-auto flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                      <input
+                        type="url"
+                        value={editVideoUrlInput}
+                        onChange={(e) => setEditVideoUrlInput(e.target.value)}
+                        placeholder="https://www.youtube.com/watch?v=..."
+                        className="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs font-mono focus:outline-none focus:ring-1 focus:ring-red-500 w-full sm:w-64"
+                      />
+                      <div className="flex items-center space-x-1.5">
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            if (!editVideoUrlInput.trim()) return;
+                            const trimmed = editVideoUrlInput.trim();
+                            const ytThumb = getYouTubeThumbnail(trimmed);
+                            const updates: any = { url: trimmed };
+                            if (ytThumb && (!vid.thumbnailUrl || vid.thumbnailUrl.startsWith('/uploads'))) {
+                              updates.thumbnailUrl = ytThumb;
+                            }
+                            await updateVideo(vid.id, updates);
+                            setEditingVideoId(null);
+                            setEditSuccessMsg(translate('Video link updated successfully!', 'Link ya vidio ya cinjwa bwino!'));
+                            setTimeout(() => setEditSuccessMsg(null), 3000);
+                          }}
+                          className="px-3 py-1.5 bg-green-600 hover:bg-green-500 text-white text-xs font-bold rounded-lg transition cursor-pointer"
+                        >
+                          {translate('Save', 'Sunga')}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setEditingVideoId(null)}
+                          className="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs rounded-lg transition cursor-pointer"
+                        >
+                          {translate('Cancel', 'Kansela')}
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-center space-x-2 shrink-0">
+                      <a
+                        href={vid.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-2 rounded-lg bg-slate-850 hover:bg-slate-800 text-slate-300 hover:text-white transition cursor-pointer"
+                        title={translate('Open Video URL', 'Isula Link')}
+                      >
+                        <ExternalLink className="h-4 w-4" />
+                      </a>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditingVideoId(vid.id);
+                          setEditVideoUrlInput(vid.url);
+                        }}
+                        className="px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-850 hover:bg-slate-800 text-slate-200 text-xs font-bold flex items-center space-x-1.5 transition cursor-pointer"
+                        title={translate('Set or update YouTube link for this video', 'Bikapo YouTube link')}
+                      >
+                        <Edit3 className="h-3.5 w-3.5 text-orange-400" />
+                        <span>{translate('Edit URL', 'Cinja Link')}</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          if (confirm(translate(`Delete video "${vid.title_en}"?`, `Kufumyapo vidio iyi?`))) {
+                            await deleteVideo(vid.id);
+                          }
+                        }}
+                        className="p-2 rounded-lg border border-red-500/20 bg-red-500/10 hover:bg-red-500/20 text-red-400 transition cursor-pointer"
+                        title={translate('Delete video', 'Fumyapo vidio')}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )}

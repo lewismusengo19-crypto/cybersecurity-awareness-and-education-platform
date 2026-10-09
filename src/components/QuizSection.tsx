@@ -491,7 +491,7 @@ export const QuizSection: React.FC = () => {
         </div>
       ) : (
         /* ACTIVE PLAYING INTERACTIVE BOARD */
-        <div className="max-w-3xl mx-auto bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl relative text-left">
+        <div className="max-w-3xl mx-auto bg-slate-900 border border-slate-800 rounded-2xl sm:rounded-3xl p-4 sm:p-8 shadow-2xl relative text-left">
           {/* Progress header */}
           <div className="flex flex-wrap justify-between items-center border-b border-slate-800 pb-4 mb-6 gap-3">
             <div>

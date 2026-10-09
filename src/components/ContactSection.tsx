@@ -107,7 +107,7 @@ export const ContactSection: React.FC = () => {
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     placeholder="Lewis Musengo"
-                    className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
                   />
                 </div>
 
@@ -122,7 +122,7 @@ export const ContactSection: React.FC = () => {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="lewismusengo19@gmail.com"
-                    className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
                   />
                 </div>
 
@@ -137,14 +137,14 @@ export const ContactSection: React.FC = () => {
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
                     placeholder={translate('I have a question about mobile money scam...', 'Ninkwatako ilipusho pali Mobile Money Scam...')}
-                    className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
                   ></textarea>
                 </div>
 
                 <button
                   id="contact-submit-btn"
                   type="submit"
-                  className="w-full py-2.5 bg-green-600 hover:bg-green-500 text-white font-bold rounded-lg text-sm shadow cursor-pointer transition-all"
+                  className="w-full py-3 bg-green-600 hover:bg-green-500 text-white font-bold rounded-xl text-sm shadow cursor-pointer transition-all min-h-[44px] active:scale-95 flex items-center justify-center"
                 >
                   {translate('Submit Feedback', 'Tumeni Message')}
                 </button>
