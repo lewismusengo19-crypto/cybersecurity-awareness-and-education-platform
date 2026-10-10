@@ -867,8 +867,8 @@ export const Navbar: React.FC = () => {
                   </div>
                   <p className="text-[10px] text-slate-300 leading-tight">
                     {translate(
-                      '🔒 Administrator account requires Dual-Factor verification (Password + Master PIN). Default PIN: 260966.',
-                      '🔒 Administrator akwete 2FA security (Password + Master PIN). PIN ya kutendekelapo: 260966.'
+                      '🔒 Administrator account requires Dual-Factor verification (Password + Master PIN).',
+                      '🔒 Administrator account 2FA security (Password + Master PIN). PIN ya kutendekelapo:'
                     )}
                   </p>
                 </div>

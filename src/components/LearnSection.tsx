@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
-import { Play, Download, Search, FileText, CheckCircle, Bookmark, Eye, Maximize, AlertCircle, Volume2, HardDrive, CheckCircle2, WifiOff, ExternalLink, Youtube, Edit3, X, Check } from 'lucide-react';
+import { Play, Download, Search, FileText, CheckCircle, Bookmark, Eye, Maximize, AlertCircle, Volume2, HardDrive, CheckCircle2, WifiOff, ExternalLink, Youtube, Check } from 'lucide-react';
 import { VideoContent, PDFMaterial } from '../types';
 import { AudioVoiceoverBar } from './AudioVoiceoverBar';
 import { useOfflineStorage } from '../hooks/useOfflineStorage';
-import { isYouTubeUrl, getYouTubeVideoId, getYouTubeEmbedUrl, getYouTubeThumbnail } from '../utils/videoUtils';
+import { isYouTubeUrl, getYouTubeVideoId, getYouTubeEmbedUrl } from '../utils/videoUtils';
 
 export const LearnSection: React.FC = () => {
   const {
@@ -31,9 +31,6 @@ export const LearnSection: React.FC = () => {
   const [bookmarks, setBookmarks] = useState<string[]>([]);
   const [completedVideos, setCompletedVideos] = useState<string[]>([]);
   const [offlineOnlyFilter, setOfflineOnlyFilter] = useState<boolean>(false);
-  const [showUrlModal, setShowUrlModal] = useState<boolean>(false);
-  const [customUrlInput, setCustomUrlInput] = useState<string>('');
-  const [urlUpdateSuccess, setUrlUpdateSuccess] = useState<boolean>(false);
 
   // Synchronize when selectedVideoId changes from other sections
   useEffect(() => {
@@ -327,19 +324,6 @@ export const LearnSection: React.FC = () => {
                       </button>
                     )}
 
-                    {/* Quick Button to Update or Set YouTube Link */}
-                    <button
-                      id="edit-video-url-btn"
-                      onClick={() => {
-                        setCustomUrlInput(activeVideo.url);
-                        setShowUrlModal(true);
-                      }}
-                      className="flex-1 sm:flex-initial p-2.5 rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-750 text-slate-200 text-xs font-bold flex items-center justify-center space-x-1.5 transition-all cursor-pointer min-h-[42px] active:scale-95"
-                      title={translate('Set or update YouTube link for this video', 'Bikeniko YouTube link ya ici cisambilisho')}
-                    >
-                      <Edit3 className="h-3.5 w-3.5 text-orange-400" />
-                      <span>{isYouTubeUrl(activeVideo.url) ? translate('Change YouTube Link', 'Cinja Link') : translate('Set YouTube Link', 'Bikapo YouTube Link')}</span>
-                    </button>
 
                     <button
                       id="offline-cache-video-btn"
@@ -627,136 +611,6 @@ export const LearnSection: React.FC = () => {
         </div>
       </div>
 
-      {/* Modal to update or paste YouTube Link */}
-      {showUrlModal && activeVideo && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fade-in text-left">
-          <div className="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col">
-            <div className="p-4 sm:p-5 border-b border-slate-800 flex items-center justify-between bg-slate-950/70">
-              <div className="flex items-center space-x-3">
-                <div className="p-2 rounded-xl bg-red-600/20 text-red-400 border border-red-500/30">
-                  <Youtube className="h-5 w-5" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-base text-white">
-                    {translate('Set / Update YouTube Video Link', 'Bikeni nangu Cinjeni YouTube Link')}
-                  </h3>
-                  <p className="text-xs text-slate-400 line-clamp-1">
-                    {translate(activeVideo.title_en, activeVideo.title_bm)}
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={() => setShowUrlModal(false)}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            <form
-              onSubmit={async (e) => {
-                e.preventDefault();
-                if (!customUrlInput.trim()) return;
-                const trimmed = customUrlInput.trim();
-                const ytThumb = getYouTubeThumbnail(trimmed);
-                const updates: any = { url: trimmed };
-                if (ytThumb && (!activeVideo.thumbnailUrl || activeVideo.thumbnailUrl.startsWith('/uploads'))) {
-                  updates.thumbnailUrl = ytThumb;
-                }
-                await updateVideo(activeVideo.id, updates);
-                setActiveVideo(prev => prev ? { ...prev, ...updates } : prev);
-                setUrlUpdateSuccess(true);
-                setTimeout(() => {
-                  setUrlUpdateSuccess(false);
-                  setShowUrlModal(false);
-                }, 1000);
-              }}
-              className="p-5 space-y-4"
-            >
-              <div>
-                <label className="block text-xs font-medium uppercase tracking-wider text-slate-400 mb-1.5">
-                  {translate('YouTube Video URL or Shorts Link', 'Link ya YouTube nangu Shorts')}
-                </label>
-                <input
-                  id="youtube-url-input"
-                  type="url"
-                  required
-                  value={customUrlInput}
-                  onChange={(e) => setCustomUrlInput(e.target.value)}
-                  placeholder="https://www.youtube.com/watch?v=... or https://youtu.be/..."
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-red-500 font-mono"
-                />
-                <p className="text-[11px] text-slate-400 mt-1">
-                  {translate(
-                    'Paste any standard YouTube watch link, youtu.be short link, or YouTube Shorts link.',
-                    'Kutimwabikapo link ya YouTube iyili yonse nangu Shorts link.'
-                  )}
-                </p>
-              </div>
-
-              {/* Live validation feedback */}
-              {customUrlInput.trim() && (
-                <div className={`p-3 rounded-xl border text-xs flex items-center space-x-2 ${
-                  isYouTubeUrl(customUrlInput.trim())
-                    ? 'bg-green-500/10 border-green-500/30 text-green-300'
-                    : 'bg-amber-500/10 border-amber-500/30 text-amber-300'
-                }`}>
-                  {isYouTubeUrl(customUrlInput.trim()) ? (
-                    <>
-                      <Check className="h-4 w-4 text-green-400 shrink-0" />
-                      <span>
-                        {translate(
-                          `Recognized YouTube video (ID: ${getYouTubeVideoId(customUrlInput.trim()) || 'valid'}). Will stream in high definition inside the interactive academy player!`,
-                          `Iyi link ya YouTube yalembwa bwino. Yalayisa muli player ya academy!`
-                        )}
-                      </span>
-                    </>
-                  ) : (
-                    <>
-                      <AlertCircle className="h-4 w-4 text-amber-400 shrink-0" />
-                      <span>
-                        {translate(
-                          'Direct URL detected. For YouTube streaming, use a link starting with youtube.com or youtu.be.',
-                          'Link eyo mwabikapo tayili ya YouTube, epo yaingila.'
-                        )}
-                      </span>
-                    </>
-                  )}
-                </div>
-              )}
-
-              {/* Action buttons */}
-              <div className="flex items-center justify-end space-x-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowUrlModal(false)}
-                  className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer"
-                >
-                  {translate('Cancel', 'Kanseleni')}
-                </button>
-                <button
-                  id="save-youtube-url-btn"
-                  type="submit"
-                  disabled={!customUrlInput.trim()}
-                  className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-500 disabled:opacity-50 text-white font-bold text-xs flex items-center space-x-1.5 transition shadow cursor-pointer active:scale-95"
-                >
-                  {urlUpdateSuccess ? (
-                    <>
-                      <Check className="h-4 w-4" />
-                      <span>{translate('Saved & Applied!', 'Nafilembwa!')}</span>
-                    </>
-                  ) : (
-                    <>
-                      <Youtube className="h-4 w-4" />
-                      <span>{translate('Save & Stream Video', 'Sungeni no Kutamba')}</span>
-                    </>
-                  )}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

@@ -26,6 +26,19 @@ export const SAMPLE_VIDEOS: VideoContent[] = [
     views: 172,
     downloads: 46,
     createdAt: '2026-07-08T08:30:00Z'
+  },
+  {
+    id: 'vid-shikulu-mwila-fake-gold-scam',
+    title_en: 'Fake Gold SMS Scam: "Shikulu Mwila" 450g Mineral Fraud',
+    title_bm: 'Ubufi bwa Golide (Gold) na Ba Shikulu Mwila: Ukwishiba ama SMS ya Bufi',
+    description_en: 'Video breakdown of the infamous "Shikulu Mwila" fake gold SMS scam circulating across Zambia. Fraudsters impersonate an elderly patriarch claiming to have 450g of raw gold with a 35% discount, seeking mobile money advance fees or luring buyers into robbery traps. Learn the linguistic red flags and how to protect yourself.',
+    description_bm: 'Icilolekesho ca vidio pa bufi bwa golide (gold) na ba "Shikulu Mwila" ubo bupulamafunde baletuma pa ma foni mu Zambia. Bapulamafunde balecita kwati ni shikulu umukote uwakwata golide ya 450g no kupela 35% discount pakuti balye indalama sha mobile money. Sambilileni ifishibilo fyonse ne fyo mwingacingilila indalama shenu.',
+    url: 'https://youtu.be/1eEQYzV5Zn4?si=YNfUXSSzmWu3jr_v',
+    thumbnailUrl: 'https://img.youtube.com/vi/1eEQYzV5Zn4/hqdefault.jpg',
+    duration: '01:45',
+    views: 265,
+    downloads: 74,
+    createdAt: '2026-09-16T10:00:00Z'
   }
 ];
 

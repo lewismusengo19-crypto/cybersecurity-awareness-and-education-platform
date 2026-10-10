@@ -120,9 +120,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             if (
               merged[idx].url.includes('facebook.com/reel/1398945024917902') ||
               merged[idx].url.includes('facebook.com/reel/1433376975358331') ||
-              (sample.url.includes('youtu') && merged[idx].url.includes('facebook.com'))
+              (sample.url.includes('youtu') && merged[idx].url.includes('facebook.com')) ||
+              (sample.url !== merged[idx].url && sample.url.includes('youtu'))
             ) {
-              merged[idx] = { ...merged[idx], url: sample.url, thumbnailUrl: sample.thumbnailUrl };
+              merged[idx] = { ...merged[idx], ...sample, url: sample.url, thumbnailUrl: sample.thumbnailUrl };
               migrated = true;
             } else {
               merged[idx] = { ...sample, ...merged[idx] };
@@ -359,8 +360,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           const fetchedVideos: VideoContent[] = [];
           videoSnap.forEach(d => fetchedVideos.push(d.data() as VideoContent));
           SAMPLE_VIDEOS.forEach(sample => {
-            if (!fetchedVideos.some(v => v.id === sample.id)) {
+            const foundIdx = fetchedVideos.findIndex(v => v.id === sample.id);
+            if (foundIdx === -1) {
               fetchedVideos.unshift(sample);
+            } else if (sample.url.includes('youtu') && fetchedVideos[foundIdx].url !== sample.url) {
+              fetchedVideos[foundIdx] = { ...fetchedVideos[foundIdx], ...sample };
             }
           });
           setVideos(fetchedVideos);

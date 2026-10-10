@@ -19,7 +19,9 @@ import {
   Sparkles,
   Info,
   ChevronRight,
-  Award
+  Award,
+  Play,
+  Youtube
 } from 'lucide-react';
 import { ImageContent } from '../types';
 import { AudioVoiceoverBar } from './AudioVoiceoverBar';
@@ -463,19 +465,35 @@ export const GallerySection: React.FC = () => {
                       />
                     </div>
 
-                    {/* Quick Quiz Link */}
-                    <button
-                      id="modal-take-scam-quiz-btn"
-                      onClick={() => {
-                        setActiveImage(null);
-                        app.setActiveSection('quizzes');
-                      }}
-                      className="w-full py-2.5 px-4 bg-green-600 hover:bg-green-500 text-white rounded-xl text-xs font-bold flex items-center justify-center space-x-2 shadow-lg cursor-pointer transition transform hover:scale-[1.02]"
-                      title={app.translate('Test your knowledge on this scam in the quiz section', 'Esheni amano yenu muli quiz')}
-                    >
-                      <Award className="h-4 w-4" />
-                      <span>{app.translate('Take Fake Gold Quiz', 'Pitileni mu Quiz ya Golide')}</span>
-                    </button>
+                    {/* Quick Action Links */}
+                    <div className="space-y-2">
+                      <button
+                        id="modal-watch-scam-video-btn"
+                        onClick={() => {
+                          setActiveImage(null);
+                          app.setSelectedVideoId('vid-shikulu-mwila-fake-gold-scam');
+                          app.setActiveSection('learn');
+                        }}
+                        className="w-full py-2.5 px-4 bg-red-600 hover:bg-red-500 text-white rounded-xl text-xs font-bold flex items-center justify-center space-x-2 shadow-lg cursor-pointer transition transform hover:scale-[1.02]"
+                        title={app.translate('Watch the video lesson for this scam in the learning section', 'Tambeni vidio pa bufi ubu')}
+                      >
+                        <Youtube className="h-4 w-4" />
+                        <span>{app.translate('Watch Video Breakdown', 'Tambeni Vidio ya Isambililo')}</span>
+                      </button>
+
+                      <button
+                        id="modal-take-scam-quiz-btn"
+                        onClick={() => {
+                          setActiveImage(null);
+                          app.setActiveSection('quizzes');
+                        }}
+                        className="w-full py-2.5 px-4 bg-green-600 hover:bg-green-500 text-white rounded-xl text-xs font-bold flex items-center justify-center space-x-2 shadow-lg cursor-pointer transition transform hover:scale-[1.02]"
+                        title={app.translate('Test your knowledge on this scam in the quiz section', 'Esheni amano yenu muli quiz')}
+                      >
+                        <Award className="h-4 w-4" />
+                        <span>{app.translate('Take Fake Gold Quiz', 'Pitileni mu Quiz ya Golide')}</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
 
