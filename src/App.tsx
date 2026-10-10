@@ -46,13 +46,17 @@ const MainAppContent: React.FC = () => {
   };
 
   return (
-    <div className={`min-h-screen flex flex-col transition-all duration-300 font-sans ${
-      highContrast 
-        ? 'bg-black text-yellow-400 selection:bg-yellow-400 selection:text-black' 
-        : 'bg-slate-950 text-slate-100 selection:bg-green-500/30 selection:text-white'
-    } ${
-      textSize === 'large' ? 'text-lg' : 'text-sm'
-    }`} id="app-container">
+    <div
+      style={{ backgroundColor: highContrast ? '#000000' : '#020617' }}
+      className={`min-h-screen min-h-[100dvh] w-full flex flex-col transition-all duration-300 font-sans ${
+        highContrast 
+          ? 'bg-black text-yellow-400 selection:bg-yellow-400 selection:text-black' 
+          : 'bg-slate-950 text-slate-100 selection:bg-green-500/30 selection:text-white'
+      } ${
+        textSize === 'large' ? 'text-lg' : 'text-sm'
+      }`}
+      id="app-container"
+    >
       {/* Navbar */}
       <Navbar />
 
