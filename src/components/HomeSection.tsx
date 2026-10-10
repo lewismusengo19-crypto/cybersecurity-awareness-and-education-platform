@@ -166,15 +166,15 @@ export const HomeSection: React.FC = () => {
 
               {/* Small interactive notification mockup inside illustration */}
               <div className="bg-slate-900/90 border border-slate-800 p-2.5 rounded-lg flex items-center space-x-3 text-left">
-                <div className="p-1 bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 rounded">
+                <div className="p-1 bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 rounded shrink-0">
                   <AlertTriangle className="h-4 w-4" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-[10px] font-bold text-slate-200 truncate">
-                    
+                    {translate('URGENT: ZICTA Fake Gold SMS Alert', 'KUCENJELA: Ubufi bwa Golide (Gold)')}
                   </p>
                   <p className="text-[9px] text-slate-400 truncate">
-                    
+                    {translate('Verify mineral claims directly; report suspicious SMS to 709.', 'Mwituma indalama kuli bamapulamafunde; reporteni 709.')}
                   </p>
                 </div>
               </div>
@@ -183,40 +183,40 @@ export const HomeSection: React.FC = () => {
         </div>
       </div>
 
-      {/* STATISTICS PANELS */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6" id="stats-dashboard">
-        <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl flex items-center space-x-4 shadow text-left">
-          <div className="p-3 bg-green-500/10 text-green-400 rounded-xl">
-            <CheckCircle className="h-6 w-6" />
+      {/* STATISTICS PANELS - Desktop-style 3-column layout on all viewports */}
+      <div className="grid grid-cols-3 gap-2 sm:gap-6" id="stats-dashboard">
+        <div className="bg-slate-900 border border-slate-800 p-3 sm:p-6 rounded-2xl flex flex-col sm:flex-row items-center sm:items-center space-y-1 sm:space-y-0 sm:space-x-4 shadow text-center sm:text-left">
+          <div className="p-2 sm:p-3 bg-green-500/10 text-green-400 rounded-xl shrink-0">
+            <CheckCircle className="h-4 w-4 sm:h-6 sm:w-6" />
           </div>
-          <div>
-            <span className="text-3xl font-extrabold text-white block">{activeLearners}+</span>
-            <span className="text-xs text-slate-400 uppercase tracking-wider block font-mono">
-              {translate('Active Zambian Learners', 'Abantu Abalesambilila')}
+          <div className="min-w-0">
+            <span className="text-lg sm:text-3xl font-extrabold text-white block">{activeLearners}+</span>
+            <span className="text-[10px] sm:text-xs text-slate-400 uppercase tracking-wider block font-mono truncate">
+              {translate('Active Learners', 'Abalesambilila')}
             </span>
           </div>
         </div>
 
-        <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl flex items-center space-x-4 shadow text-left">
-          <div className="p-3 bg-blue-500/10 text-blue-400 rounded-xl">
-            <Play className="h-6 w-6" />
+        <div className="bg-slate-900 border border-slate-800 p-3 sm:p-6 rounded-2xl flex flex-col sm:flex-row items-center sm:items-center space-y-1 sm:space-y-0 sm:space-x-4 shadow text-center sm:text-left">
+          <div className="p-2 sm:p-3 bg-blue-500/10 text-blue-400 rounded-xl shrink-0">
+            <Play className="h-4 w-4 sm:h-6 sm:w-6" />
           </div>
-          <div>
-            <span className="text-3xl font-extrabold text-white block">{videos.length}</span>
-            <span className="text-xs text-slate-400 uppercase tracking-wider block font-mono">
-              {translate('Educational Videos', 'Amavidio aya Sambilisha')}
+          <div className="min-w-0">
+            <span className="text-lg sm:text-3xl font-extrabold text-white block">{videos.length}</span>
+            <span className="text-[10px] sm:text-xs text-slate-400 uppercase tracking-wider block font-mono truncate">
+              {translate('Videos', 'Amavidio')}
             </span>
           </div>
         </div>
 
-        <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl flex items-center space-x-4 shadow text-left">
-          <div className="p-3 bg-yellow-500/10 text-yellow-400 rounded-xl">
-            <Award className="h-6 w-6" />
+        <div className="bg-slate-900 border border-slate-800 p-3 sm:p-6 rounded-2xl flex flex-col sm:flex-row items-center sm:items-center space-y-1 sm:space-y-0 sm:space-x-4 shadow text-center sm:text-left">
+          <div className="p-2 sm:p-3 bg-yellow-500/10 text-yellow-400 rounded-xl shrink-0">
+            <Award className="h-4 w-4 sm:h-6 sm:w-6" />
           </div>
-          <div>
-            <span className="text-3xl font-extrabold text-white block">{totalQuizzesCompleted}</span>
-            <span className="text-xs text-slate-400 uppercase tracking-wider block font-mono">
-              {translate('Quizzes Completed', 'Ama Quizzes Ayapwishiwe')}
+          <div className="min-w-0">
+            <span className="text-lg sm:text-3xl font-extrabold text-white block">{totalQuizzesCompleted}</span>
+            <span className="text-[10px] sm:text-xs text-slate-400 uppercase tracking-wider block font-mono truncate">
+              {translate('Quizzes Done', 'Ama Quiz')}
             </span>
           </div>
         </div>

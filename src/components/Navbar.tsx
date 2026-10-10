@@ -352,6 +352,95 @@ export const Navbar: React.FC = () => {
               {language.toUpperCase()}
             </button>
 
+            {/* Mobile Accessibility settings */}
+            <div className="relative">
+              <button
+                id="acc-settings-btn-mobile"
+                onClick={() => setShowSettingsDropdown(!showSettingsDropdown)}
+                className={`p-1.5 rounded-lg border text-xs cursor-pointer ${
+                  highContrast 
+                    ? 'border-yellow-400 text-yellow-400' 
+                    : 'border-slate-800 bg-slate-850 text-slate-300'
+                }`}
+                title={translate('Accessibility settings', 'Ifya kucinja imisungile')}
+              >
+                <Settings className="h-4 w-4" />
+              </button>
+
+              {showSettingsDropdown && (
+                <div className={`absolute right-0 mt-2 w-52 rounded-xl shadow-2xl border p-3 space-y-3 z-[60] ${
+                  highContrast ? 'bg-black border-yellow-400 text-yellow-400' : 'bg-slate-900 border-slate-700 text-white'
+                }`}>
+                  <p className="text-xs font-bold uppercase tracking-wider text-slate-400 border-b border-slate-700 pb-1">
+                    {translate('Accessibility', 'Ukucita ifingafwa')}
+                  </p>
+                  
+                  {/* High Contrast Toggle */}
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs">{translate('High Contrast', 'High Contrast')}</span>
+                    <button
+                      id="contrast-toggle-mobile"
+                      onClick={() => setHighContrast(!highContrast)}
+                      className={`p-1.5 rounded cursor-pointer ${
+                        highContrast ? 'bg-yellow-400 text-black' : 'bg-slate-700 text-white hover:bg-slate-600'
+                      }`}
+                    >
+                      <Eye className="h-4 w-4" />
+                    </button>
+                  </div>
+
+                  {/* Text Size Toggle */}
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs">{translate('Large Text', 'Ifyalembwa')}</span>
+                    <button
+                      id="text-size-toggle-mobile"
+                      onClick={() => setTextSize(textSize === 'normal' ? 'large' : 'normal')}
+                      className={`p-1.5 rounded cursor-pointer ${
+                        textSize === 'large' 
+                          ? highContrast ? 'bg-yellow-400 text-black' : 'bg-green-600 text-white' 
+                          : 'bg-slate-700 text-white hover:bg-slate-600'
+                      }`}
+                    >
+                      <Type className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Mobile Auth Button */}
+            {user ? (
+              <button
+                id="mobile-user-profile-btn"
+                onClick={() => setMobileMenuOpen(true)}
+                className={`px-2 py-1.5 rounded-lg border text-xs flex items-center space-x-1 ${
+                  highContrast ? 'border-yellow-400 text-yellow-400' : 'border-slate-800 bg-slate-850 text-slate-200'
+                }`}
+                title={profile?.displayName}
+              >
+                <UserIcon className="h-3.5 w-3.5 text-green-400" />
+                <span className="max-w-[60px] truncate text-[11px] font-semibold">{profile?.displayName?.split(' ')[0] || 'User'}</span>
+              </button>
+            ) : (
+              <button
+                id="mobile-login-trigger-btn"
+                onClick={() => {
+                  setAuthMode('login');
+                  setErrorMsg(null);
+                  setResetSuccessMsg(null);
+                  setShowAuthModal(true);
+                }}
+                className={`px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center space-x-1 transition-all cursor-pointer ${
+                  highContrast 
+                    ? 'bg-yellow-400 text-black font-black' 
+                    : 'bg-green-600 text-white shadow'
+                }`}
+              >
+                <LogIn className="h-3.5 w-3.5" />
+                <span>{translate('Sign In', 'Ingila')}</span>
+              </button>
+            )}
+
             {/* Hamburger / Menu toggle */}
             <button
               id="mobile-menu-btn"
@@ -366,6 +455,60 @@ export const Navbar: React.FC = () => {
               <Menu className="h-5 w-5" />
             </button>
           </div>
+        </div>
+      </div>
+
+      {/* Mobile Desktop-Style Navigation Tabs Bar */}
+      <div
+        id="mobile-desktop-tabs"
+        className={`md:hidden border-t px-2 py-2 overflow-x-auto no-scrollbar scroll-smooth transition-colors ${
+          highContrast
+            ? 'bg-black border-yellow-400'
+            : 'bg-slate-900/98 border-slate-800'
+        }`}
+      >
+        <div className="flex space-x-1.5 items-center min-w-max px-1">
+          {menuItems.map((item) => {
+            const isActive = activeSection === item.id;
+            return (
+              <button
+                key={item.id}
+                id={`mobile-tab-${item.id}`}
+                onClick={() => {
+                  setActiveSection(item.id);
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all duration-150 cursor-pointer ${
+                  isActive
+                    ? highContrast
+                      ? 'bg-yellow-400 text-black font-extrabold shadow'
+                      : 'bg-green-600 text-white font-bold shadow-md'
+                    : highContrast
+                      ? 'text-yellow-400 hover:bg-yellow-400/20'
+                      : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                }`}
+              >
+                {translate(item.en, item.bm)}
+              </button>
+            );
+          })}
+
+          {profile?.role === 'admin' && (
+            <button
+              id="mobile-tab-admin"
+              onClick={() => {
+                setActiveSection('admin');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold border whitespace-nowrap transition-all cursor-pointer ${
+                activeSection === 'admin'
+                  ? 'bg-orange-500 border-orange-500 text-white shadow'
+                  : 'border-orange-500/50 text-orange-400 hover:bg-orange-500/10'
+              }`}
+            >
+              {translate('Admin Portal', 'Admin Portal')}
+            </button>
+          )}
         </div>
       </div>
 
